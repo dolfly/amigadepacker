@@ -47,9 +47,6 @@ typedef uint32_t ULONG;
 static ULONG key_start = 0;
 
 
-static unsigned int key_match = 0;
-
-
 inline void ppDecryptCopy(UBYTE *src, UBYTE *dest, ULONG len, ULONG key)
 {
   UBYTE a = (key>>24) & 0xFF;
@@ -300,7 +297,7 @@ int ppcrack(FILE *fo, UBYTE *data, ULONG len) {
         fprintf(stderr, "key %08x success!\n", key);
 	ppDecrunch(temp, output, &data[6], len-14, outlen, data[len-1]);
 
-	key_match = key;
+	/* key_match = key */
         /* sprintf(output_name, "%s.%08x", name, key); */
 	
         savefile(fo, output, outlen);
