@@ -21,6 +21,10 @@ mmcmp.o:	mmcmp.c mmcmp.h
 unsqsh.o:	unsqsh.c unsqsh.h
 	$(CC) $(CFLAGS) -c $<
 
+install:	amigadepacker
+	mkdir -p {PREFIX}/bin
+	install amigadepacker {PREFIX}/bin/
+
 check:	amigadepacker
 	cd tests && ./check.sh
 

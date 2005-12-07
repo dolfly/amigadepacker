@@ -62,7 +62,7 @@ int decrunch(const char *filename, FILE *out)
     if (out != stdout) {
 	int fd;
 	snprintf(dstname, sizeof dstname, "%s.XXXXXX", filename);
-	if ((fd = mkstemp(dstname))) {
+	if ((fd = mkstemp(dstname)) < 0) {
 	    fprintf(stderr, "Could not create a temporary file: %s (%s)\n", dstname, strerror(errno));
 	    goto error;
 	}

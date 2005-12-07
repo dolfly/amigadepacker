@@ -1,2 +1,3 @@
 2005-12-07  Heikki Orsila <heikki.orsila@iki.fi>
-	- Initial version supports Power Packer and XPK Squash (SQSH) packers.
+	- Initial version supports Power Packer, XPK Squash (SQSH), and
+	  MMCMP packers.
