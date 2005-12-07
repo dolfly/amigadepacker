@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
 #include "decrunch.h"
 #include "ppdepack.h"
@@ -36,19 +37,25 @@ enum {
 };
 
 
-int decrunch (FILE *out, FILE *in)
+int decrunch(const char *filename, FILE *out)
 {
-    unsigned char b[12];
+    uint8_t b[12];
     int builtin, res;
     char *packer;
     size_t nbytes;
+    FILE *in;
+
+    if ((in = fopen(filename, "r")) == NULL) {
+      fprintf(stderr, "Unknown file %s\n", filename);
+      goto error;
+    }
 
     packer = NULL;
     builtin = 0;
 
     nbytes = fread(b, 1, sizeof b, in);
     if (nbytes < 12)
-	return 0;
+	goto error;
 
     if ((b[0] == 'P' && b[1] == 'X' && b[2] == '2' && b[3] == '0') ||
 	(b[0] == 'P'  && b[1] == 'P'  && b[2] == '2'  && b[3] == '0')) {
@@ -67,7 +74,7 @@ int decrunch (FILE *out, FILE *in)
     fseek (in, 0, SEEK_SET);
 
     if (!packer)
-	return 0;
+	goto error;
 
     res = 0;
     switch (builtin) {
@@ -83,7 +90,13 @@ int decrunch (FILE *out, FILE *in)
     }
 
     if (res < 0)
-	return -1;
+      goto error;
 
-    return 1;
+    fclose(in);
+    return 0;
+
+ error:
+    if (in)
+	fclose(in);
+    return -1;
 }

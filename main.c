@@ -8,7 +8,6 @@
 int main(int argc, char **argv)
 {
     int ret, res, i;
-    FILE *in, *out;
     int use_stdout = 0;
 
     struct option long_options[] = {
@@ -42,18 +41,8 @@ int main(int argc, char **argv)
     }
 
     for (i = optind; i < argc; i++) {
-	in = fopen(argv[i], "r");
-	if (in == NULL) {
-	    fprintf(stderr, "Can not open %s.\n", argv[i]);
-	    continue;
-	}
 	printf("Decrunching %s\n", argv[i]);
-	if (use_stdout) {
-	    out = stdout;
-	} else {
-	    out = fopen("temp", "w");
-	}
-	ret = decrunch(out, in);
+	ret = decrunch(argv[i], use_stdout ? stdout : NULL);
 	if (ret < 0)
 	    res = -1;
     }
