@@ -1,0 +1,42 @@
+.TH pmr 1 "2005-12-07" Linux "user commands"
+
+.SH NAME
+amigadepacker \- Tool for depacking some compressed Amiga formats
+
+.SH SYNTAX
+.B amigadepacker
+[\fB-h\fR] FILE ...
+
+.SH DESCRIPTION
+.I amigadepacker
+depacks compressed Amiga formats, which are: PowerPacker, XPK SQSH, and MMCMP.
+Amigadepacker will automatically determine the compressed format by content.
+
+The tool can be useful with
+.B uade
+(1) for playing Amiga music formats on UNIX systems.
+
+.SH OPTIONS
+.TP
+.B \-h
+Display help
+
+.SH EXAMPLES
+.nf
+Unpack a file:
+.ft B
+amigadepacker foo
+
+.ft R
+Unpack a file from stdin to stdout:
+.ft B
+cat foo |amigadepacker -c > foo.depacked
+
+.SH AUTHOR
+.B amigadepacker
+was written by Heikki Orsila <heikki.orsila@iki.fi>. Decompressor for
+SQSH format was written by Bert Jahn <jah@fh-zwickau.de>, PowerPacker
+depacker and decrypter by Stuart Caie <kyzer@4u.net>, and MMCMP depacker
+by Olivier Lapicque <olivierl@jps.net>. The amigadepacker
+web page is located at http://www.iki.fi/shd/foss/amigadepacker/
+.br
