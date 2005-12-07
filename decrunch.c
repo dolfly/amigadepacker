@@ -41,7 +41,7 @@ enum {
 };
 
 
-int decrunch(const char *filename, FILE *out)
+int decrunch(const char *filename, FILE *out, int pretend)
 {
     uint8_t b[12];
     int builtin, res;
@@ -89,6 +89,9 @@ int decrunch(const char *filename, FILE *out)
       fprintf(stderr, "File %s is in %s format.\n", filename, packer);
     else
       fprintf(stderr, "Stream is in %s format.\n", packer);
+
+    if (pretend)
+      return 0;
 
     if (out != stdout) {
 	int fd;

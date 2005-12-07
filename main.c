@@ -10,22 +10,30 @@ int main(int argc, char **argv)
 {
     int ret, res, i;
     int use_stdout = 0;
+    int pretend = 0;
 
     struct option long_options[] = {
 	{"help", 0, NULL, 'd'},
+	{"pretend", 0, NULL, 'p'},
 	{"stdout", 0, NULL, 'c'},
 	{"version", 0, NULL, 'v'},
 	{NULL, 0, NULL, 0}
     };
 
-    while ((ret = getopt_long(argc, argv, "chv", long_options, 0)) != -1) {
+    while ((ret = getopt_long(argc, argv, "chpv", long_options, 0)) != -1) {
 	switch (ret) {
 	case 'c':
 	    use_stdout = 1;
 	    break;
 	case 'h':
 	    printf("\n");
-	    printf("Usage: amigadepacker [-h] FILE ...\n");
+	    printf("Usage: amigadepacker [-c] [-h] [-p] [-v] FILE ...\n");
+	    printf("\n");
+	    printf(" -c     Unpack to stdout.\n");
+	    printf(" -h     Print this.\n");
+	    printf(" -p     Do not depack anything, just pretend to. Useful for searching packed\n");
+	    printf("        files. Names of packed files will be printed to stderr.\n");
+	    printf(" -v     Print version information.\n");
 	    printf("\n");
 	    printf("Example 1: Depack file:\n");
 	    printf("\tamigadepacker foo\n");
@@ -34,6 +42,9 @@ int main(int argc, char **argv)
 	    printf("\tamigadepacker -c < foo > outfile\n");
 	    printf("\n");
 	    return 0;
+	case 'p':
+	    pretend = 1;
+	    break;
 	case 'v':
 	    printf("\n");
 	    printf("amigadepacker v%s by Heikki Orsila <heikki.orsila@iki.fi>\n", VERSION);
@@ -54,11 +65,11 @@ int main(int argc, char **argv)
     }
 
     if ((use_stdout) && optind == argc) {
-	res = decrunch("", stdout);
+	res = decrunch("", stdout, pretend);
     } else {
 	res = 0;
 	for (i = optind; i < argc; i++) {
-	    if (decrunch(argv[i], use_stdout ? stdout : NULL) < 0)
+	    if (decrunch(argv[i], use_stdout ? stdout : NULL, pretend) < 0)
 		res = -1;
 	}
     }

@@ -15,6 +15,6 @@
 
 #include <stdio.h>
 
-int decrunch (const char *filename, FILE *out);
+int decrunch (const char *filename, FILE *out, int pretend);
 
 #endif

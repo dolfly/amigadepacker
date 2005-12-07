@@ -5,7 +5,7 @@ amigadepacker \- Tool for depacking some compressed Amiga formats
 
 .SH SYNTAX
 .B amigadepacker
-[\fB-h\fR] FILE ...
+[\fB-c\fR] [\fB-h\fR] [\fB-p\fR] [\fB-v\fR] FILE ...
 
 .SH DESCRIPTION
 .I amigadepacker
@@ -18,8 +18,18 @@ The tool can be useful with
 
 .SH OPTIONS
 .TP
+.B \-c
+Unpack to stdout.
+.TP
 .B \-h
 Display help
+.TP
+.B \-p
+Pretend to unpack, but do not. Prints names of packed files to stderr. This
+is useful for searching packed files.
+.TP
+.B \-v
+Display version information
 
 .SH EXAMPLES
 .nf
@@ -33,9 +43,9 @@ Unpack a file from stdin to stdout:
 cat foo |amigadepacker -c > foo.depacked
 
 .ft R
-Unpack all files under /path:
+Scan for all packed files under /path:
 .ft B
-find /path/ -type f -print0 |xargs -0 amigadepacker
+find /path/ -type f -print0 |xargs -0 amigadepacker -p
 
 .SH AUTHOR
 .B amigadepacker
