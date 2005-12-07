@@ -23,6 +23,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <libgen.h>
+#include <errno.h>
+#include <limits.h>
+#include <unistd.h>
 
 #include "decrunch.h"
 #include "ppdepack.h"
@@ -44,10 +48,24 @@ int decrunch(const char *filename, FILE *out)
     char *packer;
     size_t nbytes;
     FILE *in;
+    char dstname[PATH_MAX] = "";
 
     if ((in = fopen(filename, "r")) == NULL) {
       fprintf(stderr, "Unknown file %s\n", filename);
       goto error;
+    }
+
+    if (out != stdout) {
+	int fd;
+	snprintf(dstname, sizeof dstname, "%s.XXXXXX", filename);
+	if ((fd = mkstemp(dstname))) {
+	    fprintf(stderr, "Could not create a temporary file: %s (%s)\n", dstname, strerror(errno));
+	    goto error;
+	}
+	if ((out = fdopen(fd, "w")) == NULL) {
+	    fprintf(stderr, "Could not fdopen temporary file: %s\n", dstname);
+	    goto error;
+	}
     }
 
     packer = NULL;
@@ -93,10 +111,24 @@ int decrunch(const char *filename, FILE *out)
       goto error;
 
     fclose(in);
+    if (out != stdout && out != NULL && dstname[0]) {
+	fclose(out);
+	if (rename(dstname, filename)) {
+	    fprintf(stderr, "Rename error: %s -> %s (%s)\n", dstname, filename, strerror(errno));
+	    unlink(dstname);
+	}
+    }
     return 0;
 
  error:
     if (in)
 	fclose(in);
+    if (out != stdout && out != NULL && dstname[0]) {
+	fclose(out);
+	if (rename(dstname, filename)) {
+	    fprintf(stderr, "Rename error: %s -> %s (%s)\n", dstname, filename, strerror(errno));
+	    unlink(dstname);
+	}
+    }
     return -1;
 }
