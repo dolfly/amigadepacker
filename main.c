@@ -32,7 +32,8 @@ int main(int argc, char **argv)
 	    printf(" -c     Unpack to stdout.\n");
 	    printf(" -h     Print this.\n");
 	    printf(" -p     Do not depack anything, just pretend to. Useful for searching packed\n");
-	    printf("        files. Names of packed files will be printed to stderr.\n");
+	    printf("        files. Names of packed files will be printed to stderr. Pretend mode\n");
+	    printf("        always returns success if arguments are valid.\n");
 	    printf(" -v     Print version information.\n");
 	    printf("\n");
 	    printf("Example 1: Depack file:\n");
@@ -73,6 +74,9 @@ int main(int argc, char **argv)
 		res = -1;
 	}
     }
+
+    if (pretend)
+      return 0;
 
     return res;
 }
