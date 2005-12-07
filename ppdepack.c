@@ -191,7 +191,7 @@ inline int ppValidate(UBYTE *src, UBYTE *offset_lens,
 }                     
 #endif
 
-int ppcrack(FILE *fo, UBYTE *data, ULONG len, char *filename) {
+int ppcrack(FILE *fo, UBYTE *data, ULONG len) {
   /* PP FORMAT:
    *      1 longword identifier           'PP20' or 'PX20'
    *     [1 word checksum (if 'PX20')     $ssss]
@@ -202,8 +202,6 @@ int ppcrack(FILE *fo, UBYTE *data, ULONG len, char *filename) {
   int success=0;
   UBYTE *output, crypted;
   ULONG outlen;
-
-  filename = filename; /* no warning */
 
   if (len < 16) {
     fprintf(stderr, "File is too short to be a PP file (%u bytes)\n", len);
@@ -321,7 +319,7 @@ return success;
 }
 
 
-int decrunch_pp (FILE *f, FILE *fo, char *filename)
+int decrunch_pp (FILE *f, FILE *fo)
 {
   int success;
   void *mem = NULL;
@@ -337,7 +335,7 @@ int decrunch_pp (FILE *f, FILE *fo, char *filename)
 
   key_start = 0;
 
-  success = ppcrack(fo, (UBYTE *) mem, (int) filelen, filename);
+  success = ppcrack(fo, (UBYTE *) mem, filelen);
   free(mem);
   return success;
 }

@@ -10,14 +10,11 @@
  * for more information.
  */
 
-/* uncomment for support for the external XPK Linux for Unix */
-//#define HAVE_XPKLIB 1
-
 #ifndef _DECRUNCH_H_
 #define _DECRUNCH_H_
 
 #include <stdio.h>
 
-int decrunch (FILE *out, FILE *in, char *s);
+int decrunch (FILE *out, FILE *in);
 
 #endif

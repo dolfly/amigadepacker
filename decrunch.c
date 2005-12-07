@@ -25,6 +25,8 @@
 
 #include "decrunch.h"
 #include "ppdepack.h"
+#include "unsqsh.h"
+#include "mmcmp.h"
 
 
 enum {
@@ -34,7 +36,7 @@ enum {
 };
 
 
-int decrunch (FILE *out, FILE *in, char *s)
+int decrunch (FILE *out, FILE *in)
 {
     unsigned char b[12];
     int builtin, res;
@@ -70,8 +72,8 @@ int decrunch (FILE *out, FILE *in, char *s)
     res = 0;
     switch (builtin) {
     case BUILTIN_PP:    
-      res = decrunch_pp (in, out, s);
-	break;
+      res = decrunch_pp (in, out);
+      break;
     case BUILTIN_SQSH:    
       res = decrunch_sqsh (in, out);
       break;
