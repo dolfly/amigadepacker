@@ -50,9 +50,13 @@ int decrunch(const char *filename, FILE *out)
     FILE *in;
     char dstname[PATH_MAX] = "";
 
-    if ((in = fopen(filename, "r")) == NULL) {
-      fprintf(stderr, "Unknown file %s\n", filename);
-      goto error;
+    if (filename[0]) {
+	if ((in = fopen(filename, "r")) == NULL) {
+	    fprintf(stderr, "Unknown file %s\n", filename);
+	    goto error;
+	}
+    } else {
+	in = stdin;
     }
 
     if (out != stdout) {

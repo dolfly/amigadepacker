@@ -21,5 +21,8 @@ mmcmp.o:	mmcmp.c mmcmp.h
 unsqsh.o:	unsqsh.c unsqsh.h
 	$(CC) $(CFLAGS) -c $<
 
+check:	amigadepacker
+	cd tests && ./check.sh
+
 clean:	
 	rm -f *.o
