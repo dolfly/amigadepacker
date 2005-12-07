@@ -43,9 +43,7 @@ int main(int argc, char **argv)
     } else {
 	res = 0;
 	for (i = optind; i < argc; i++) {
-	    printf("Decrunching %s\n", argv[i]);
-	    ret = decrunch(argv[i], use_stdout ? stdout : NULL);
-	    if (ret < 0)
+	    if (decrunch(argv[i], use_stdout ? stdout : NULL) < 0)
 		res = -1;
 	}
     }

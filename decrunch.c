@@ -127,12 +127,9 @@ int decrunch(const char *filename, FILE *out)
  error:
     if (in)
 	fclose(in);
-    if (out != stdout && out != NULL && dstname[0]) {
-	fclose(out);
-	if (rename(dstname, filename)) {
-	    fprintf(stderr, "Rename error: %s -> %s (%s)\n", dstname, filename, strerror(errno));
-	    unlink(dstname);
-	}
-    }
+    if (out != stdout && out != NULL)
+      fclose(out);
+    if (dstname[0])
+	unlink(dstname);
     return -1;
 }

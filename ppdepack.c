@@ -30,6 +30,7 @@
 #include <string.h>
 #include <stdint.h>
 
+#define WANT_PP2X_DECRYPTING
 
 static size_t filelen;
 
