@@ -20,3 +20,6 @@ mmcmp.o:	mmcmp.c mmcmp.h
 
 unsqsh.o:	unsqsh.c unsqsh.h
 	$(CC) $(CFLAGS) -c $<
+
+clean:	
+	rm -f *.o

@@ -20,4 +20,4 @@
 
 int decrunch (FILE *out, FILE *in, char *s);
 
-#endif _DECRUNCH_H_
+#endif

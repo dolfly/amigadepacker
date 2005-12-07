@@ -8,60 +8,48 @@
  * Modified by Claudio Matsuoka <claudio@helllabs.org> for xmp
  * no modifactions neccessary for uade, afaik - mld
  */
-/*
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-*/
 
 #include <stdlib.h>
 #include <string.h>
-
-#ifdef __EMX__
-#include <sys/types.h>
-#endif
-
+#include <stdint.h>
 
 #include <sys/stat.h>
 #include <unistd.h>
 #include "decrunch.h"
 
-/* #include "stdafx.h" */
-/* #include "sndfile.h" */
-
 
 typedef struct MMCMPFILEHEADER
 {
-	uint32 id_ziRC;	/* "ziRC" */
-	uint32 id_ONia;	/* "ONia" */
-	uint16 hdrsize;
+	uint32_t id_ziRC;	/* "ziRC" */
+	uint32_t id_ONia;	/* "ONia" */
+	uint16_t hdrsize;
 } MMCMPFILEHEADER, *LPMMCMPFILEHEADER;
 
 typedef struct MMCMPHEADER
 {
-	uint16 version;
-	uint16 nblocks;
-	uint32 filesize;
-	uint32 blktable;
-	uint8 glb_comp;
-	uint8 fmt_comp;
+	uint16_t version;
+	uint16_t nblocks;
+	uint32_t filesize;
+	uint32_t blktable;
+	uint8_t glb_comp;
+	uint8_t fmt_comp;
 } MMCMPHEADER, *LPMMCMPHEADER;
 
 typedef struct MMCMPBLOCK
 {
-	uint32 unpk_size;
-	uint32 pk_size;
-	uint32 xor_chk;
-	uint16 sub_blk;
-	uint16 flags;
-	uint16 tt_entries;
-	uint16 num_bits;
+	uint32_t unpk_size;
+	uint32_t pk_size;
+	uint32_t xor_chk;
+	uint16_t sub_blk;
+	uint16_t flags;
+	uint16_t tt_entries;
+	uint16_t num_bits;
 } MMCMPBLOCK, *LPMMCMPBLOCK;
 
 typedef struct MMCMPSUBBLOCK
 {
-	uint32 unpk_pos;
-	uint32 unpk_size;
+	uint32_t unpk_pos;
+	uint32_t unpk_size;
 } MMCMPSUBBLOCK, *LPMMCMPSUBBLOCK;
 
 #define mmcmp_COMP		0x0001
@@ -73,18 +61,18 @@ typedef struct MMCMPSUBBLOCK
 
 typedef struct MMCMPBITBUFFER
 {
-	uint32 bitcount;
-	uint32 bitbuffer;
-	uint8 * pSrc;
-	uint8 * pEnd;
+	uint32_t bitcount;
+	uint32_t bitbuffer;
+	uint8_t * pSrc;
+	uint8_t * pEnd;
 
 } MMCMPBITBUFFER;
 
 
-uint32 GetBits(struct MMCMPBITBUFFER *bb, uint32 nBits)
+uint32_t GetBits(struct MMCMPBITBUFFER *bb, uint32_t nBits)
 /*--------------------------------------- */
 {
-	uint32 d;
+	uint32_t d;
 	if (!nBits) return 0;
 	while (bb->bitcount < 24)
 	{
@@ -100,26 +88,26 @@ uint32 GetBits(struct MMCMPBITBUFFER *bb, uint32 nBits)
 /*#define mmcmp_LOG */
 
 #ifdef mmcmp_LOG
-extern void Log(LPCSTR s, uint32 d1=0, uint32 d2=0, uint32 d3=0);
+extern void Log(LPCSTR s, uint32_t d1=0, uint32_t d2=0, uint32_t d3=0);
 #endif
 
-const uint32 MMCMP8BitCommands[8] =
+const uint32_t MMCMP8BitCommands[8] =
 {
 	0x01, 0x03,	0x07, 0x0F,	0x1E, 0x3C,	0x78, 0xF8
 };
 
-const uint32 MMCMP8BitFetch[8] =
+const uint32_t MMCMP8BitFetch[8] =
 {
 	3, 3, 3, 3, 2, 1, 0, 0
 };
 
-const uint32 MMCMP16BitCommands[16] =
+const uint32_t MMCMP16BitCommands[16] =
 {
 	0x01, 0x03,	0x07, 0x0F,	0x1E, 0x3C,	0x78, 0xF0,
 	0x1F0, 0x3F0, 0x7F0, 0xFF0, 0x1FF0, 0x3FF0, 0x7FF0, 0xFFF0
 };
 
-const uint32 MMCMP16BitFetch[16] =
+const uint32_t MMCMP16BitFetch[16] =
 {
 	4, 4, 4, 4, 3, 2, 1, 0,
 	0, 0, 0, 0, 0, 0, 0, 0
@@ -127,37 +115,37 @@ const uint32 MMCMP16BitFetch[16] =
 
 
 
-static int mmcmp_unpack(uint8 **ppMemFile, uint32 *pdwMemLength)
+static int mmcmp_unpack(uint8_t **ppMemFile, uint32_t *pdwMemLength)
 /*--------------------------------------------------------- */
 {
-	uint32 dwMemLength = *pdwMemLength;
-	uint8 *lpMemFile = *ppMemFile;
-	uint8 *pBuffer;
+	uint32_t dwMemLength = *pdwMemLength;
+	uint8_t *lpMemFile = *ppMemFile;
+	uint8_t *pBuffer;
 	LPMMCMPFILEHEADER pmfh = (LPMMCMPFILEHEADER)(lpMemFile);
 	LPMMCMPHEADER pmmh = (LPMMCMPHEADER)(lpMemFile+10);
-	uint32 *pblk_table;
-	uint32 dwFileSize;
-	uint32 nBlock, i;
+	uint32_t *pblk_table;
+	uint32_t dwFileSize;
+	uint32_t nBlock, i;
 
 	if ((dwMemLength < 256) || (!pmfh) || (pmfh->id_ziRC != 0x4352697A) || (pmfh->id_ONia != 0x61694e4f) || (pmfh->hdrsize < 14)
 	 || (!pmmh->nblocks) || (pmmh->filesize < 16) || (pmmh->filesize > 0x8000000)
 	 || (pmmh->blktable >= dwMemLength) || (pmmh->blktable + 4*pmmh->nblocks > dwMemLength)) return -1;
 	dwFileSize = pmmh->filesize;
 /*
-	if ((pBuffer = (uint8 *)GlobalAllocPtr(GHND, (dwFileSize + 31) & ~15)) == NULL) return -1;
+	if ((pBuffer = (uint8_t *)GlobalAllocPtr(GHND, (dwFileSize + 31) & ~15)) == NULL) return -1;
 */
-	if ((pBuffer = (uint8 *)calloc(1, (dwFileSize + 31) & ~15)) == NULL) return -1;
-	pblk_table = (uint32 *)(lpMemFile+pmmh->blktable);
+	if ((pBuffer = (uint8_t *)calloc(1, (dwFileSize + 31) & ~15)) == NULL) return -1;
+	pblk_table = (uint32_t *)(lpMemFile+pmmh->blktable);
 	for (nBlock=0; nBlock<pmmh->nblocks; nBlock++)
 	{
-		uint32 dwMemPos = pblk_table[nBlock];
+		uint32_t dwMemPos = pblk_table[nBlock];
 		LPMMCMPBLOCK pblk = (LPMMCMPBLOCK)(lpMemFile+dwMemPos);
 		LPMMCMPSUBBLOCK psubblk = (LPMMCMPSUBBLOCK)(lpMemFile+dwMemPos+20);
 
 		if ((dwMemPos + 20 >= dwMemLength) || (dwMemPos + 20 + pblk->sub_blk*8 >= dwMemLength)) break;
 		dwMemPos += 20 + pblk->sub_blk*8;
 #ifdef mmcmp_LOG
-		Log("block %d: flags=%04X sub_blocks=%d", nBlock, (uint32)pblk->flags, (uint32)pblk->sub_blk);
+		Log("block %d: flags=%04X sub_blocks=%d", nBlock, (uint32_t)pblk->flags, (uint32_t)pblk->sub_blk);
 		Log(" pksize=%d unpksize=%d", pblk->pk_size, pblk->unpk_size);
 		Log(" tt_entries=%d num_bits=%d\n", pblk->tt_entries, pblk->num_bits);
 #endif
@@ -179,11 +167,11 @@ static int mmcmp_unpack(uint8 **ppMemFile, uint32 *pdwMemLength)
 		if (pblk->flags & mmcmp_16BIT)
 		{
 			MMCMPBITBUFFER bb;
-			uint16 * pDest = (uint16 *)(pBuffer + psubblk->unpk_pos);
-			uint32 dwSize = psubblk->unpk_size >> 1;
-			uint32 dwPos = 0;
-			uint32 numbits = pblk->num_bits;
-			uint32 subblk = 0, oldval = 0;
+			uint16_t * pDest = (uint16_t *)(pBuffer + psubblk->unpk_pos);
+			uint32_t dwSize = psubblk->unpk_size >> 1;
+			uint32_t dwPos = 0;
+			uint32_t numbits = pblk->num_bits;
+			uint32_t subblk = 0, oldval = 0;
 
 #ifdef mmcmp_LOG
 			Log("  16-bit block: pos=%d size=%d ", psubblk->unpk_pos, psubblk->unpk_size);
@@ -197,13 +185,13 @@ static int mmcmp_unpack(uint8 **ppMemFile, uint32 *pdwMemLength)
 			bb.pEnd = lpMemFile+dwMemPos+pblk->pk_size;
 			while (subblk < pblk->sub_blk)
 			{
-				uint32 newval = 0x10000;
-				uint32 d = GetBits(&bb, numbits+1);
+				uint32_t newval = 0x10000;
+				uint32_t d = GetBits(&bb, numbits+1);
 
 				if (d >= MMCMP16BitCommands[numbits])
 				{
-					uint32 nFetch = MMCMP16BitFetch[numbits];
-					uint32 newbits = GetBits(&bb, nFetch) + ((d - MMCMP16BitCommands[numbits]) << nFetch);
+					uint32_t nFetch = MMCMP16BitFetch[numbits];
+					uint32_t newbits = GetBits(&bb, nFetch) + ((d - MMCMP16BitCommands[numbits]) << nFetch);
 					if (newbits != numbits)
 					{
 						numbits = newbits & 0x0F;
@@ -224,7 +212,7 @@ static int mmcmp_unpack(uint8 **ppMemFile, uint32 *pdwMemLength)
 				}
 				if (newval < 0x10000)
 				{
-					newval = (newval & 1) ? (uint32)(-(int32)((newval+1) >> 1)) : (uint32)(newval >> 1);
+					newval = (newval & 1) ? (uint32_t)(-(int32_t) ((newval+1) >> 1)) : (uint32_t)(newval >> 1);
 					if (pblk->flags & mmcmp_DELTA)
 					{
 						newval += oldval;
@@ -234,26 +222,26 @@ static int mmcmp_unpack(uint8 **ppMemFile, uint32 *pdwMemLength)
 					{
 						newval ^= 0x8000;
 					}
-					pDest[dwPos++] = (uint16)newval;
+					pDest[dwPos++] = (uint16_t)newval;
 				}
 				if (dwPos >= dwSize)
 				{
 					subblk++;
 					dwPos = 0;
 					dwSize = psubblk[subblk].unpk_size >> 1;
-					pDest = (uint16 *)(pBuffer + psubblk[subblk].unpk_pos);
+					pDest = (uint16_t *)(pBuffer + psubblk[subblk].unpk_pos);
 				}
 			}
 		} else
 		/* Data is 8-bit packed */
 		{
 			MMCMPBITBUFFER bb;
-			uint8 * pDest = pBuffer + psubblk->unpk_pos;
-			uint32 dwSize = psubblk->unpk_size;
-			uint32 dwPos = 0;
-			uint32 numbits = pblk->num_bits;
-			uint32 subblk = 0, oldval = 0;
-			uint8 * ptable = lpMemFile+dwMemPos;
+			uint8_t * pDest = pBuffer + psubblk->unpk_pos;
+			uint32_t dwSize = psubblk->unpk_size;
+			uint32_t dwPos = 0;
+			uint32_t numbits = pblk->num_bits;
+			uint32_t subblk = 0, oldval = 0;
+			uint8_t * ptable = lpMemFile+dwMemPos;
 
 			bb.bitcount = 0;
 			bb.bitbuffer = 0;
@@ -261,13 +249,13 @@ static int mmcmp_unpack(uint8 **ppMemFile, uint32 *pdwMemLength)
 			bb.pEnd = lpMemFile+dwMemPos+pblk->pk_size;
 			while (subblk < pblk->sub_blk)
 			{
-				uint32 newval = 0x100;
-				uint32 d = GetBits(&bb,numbits+1);
+				uint32_t newval = 0x100;
+				uint32_t d = GetBits(&bb,numbits+1);
 
 				if (d >= MMCMP8BitCommands[numbits])
 				{
-					uint32 nFetch = MMCMP8BitFetch[numbits];
-					uint32 newbits = GetBits(&bb,nFetch) + ((d - MMCMP8BitCommands[numbits]) << nFetch);
+					uint32_t nFetch = MMCMP8BitFetch[numbits];
+					uint32_t newbits = GetBits(&bb,nFetch) + ((d - MMCMP8BitCommands[numbits]) << nFetch);
 					if (newbits != numbits)
 					{
 						numbits = newbits & 0x07;
@@ -294,7 +282,7 @@ static int mmcmp_unpack(uint8 **ppMemFile, uint32 *pdwMemLength)
 						n += oldval;
 						oldval = n;
 					}
-					pDest[dwPos++] = (uint8)n;
+					pDest[dwPos++] = (uint8_t)n;
 				}
 				if (dwPos >= dwSize)
 				{
@@ -312,24 +300,24 @@ static int mmcmp_unpack(uint8 **ppMemFile, uint32 *pdwMemLength)
 }
 
 
-int decrunch_mmcmp (FILE *f, FILE *fo)                          
+int decrunch_mmcmp (FILE *in, FILE *out)                          
 {                                                          
 	struct stat st;
-	uint8 *buf;
-	uint32 s;
-  
-	if (fo == NULL) 
-		return -1; 
+	uint8_t *buf;
+	uint32_t s;
 
-	if (fstat (fileno (f), &st))
+	if (fstat(fileno(in), &st))
 		return -1;
 
-	buf = malloc (s = st.st_size);
-	fread (buf, 1, s, f);
+	buf = malloc((s = st.st_size));
+	if (fread (buf, 1, s, in) != s) {
+	  fprintf(stderr, "mmcmp: Could not read whole file.\n");
+	  return -1;
+	}
 
-	mmcmp_unpack (&buf, &s);
- 
-	fwrite (buf, 1, s, fo);
+	mmcmp_unpack(&buf, &s);
+
+	fwrite (buf, 1, s, out);
 
 	free (buf);
 

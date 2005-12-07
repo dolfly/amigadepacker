@@ -6,36 +6,26 @@
   
   tested with sas6.51(m68k) gcc2.7.2(i386) gcc2.7.2(sparc)
 
-*/
-
-/*
-
   modified by Claudio Matsuoka <claudio@helllabs.org> for use with xmp
   checksum added by Sipos Attila <h430827@stud.u-szeged.hu>
 */
 
-/*
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-*/
-
-#ifndef HAVE_XPKLIB
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "decrunch.h"
+
+#include <stdint.h>
+
 
 #define XPKERR_CHKSUM 1
 #define XPKERR_UNKNOWNTYPE 2
 
-typedef unsigned char byte;
-typedef unsigned int ULONG;
-typedef unsigned short int UWORD;
+typedef uint8_t byte;
+typedef uint16_t UWORD;
+typedef uint32_t ULONG;
+
  
 static int unpack(byte *src, byte *dst, int len);
-static volatile int xpkerrno;
 
 static int unsqsh(FILE *in, FILE *out)
 {
@@ -163,7 +153,6 @@ static int unpack(byte *src, byte *dst, int len) {
         6,2,3,7,8,0,6,5,7,2,3,4,8,0,7,6,8,2,3,4,5,0,8,7,6,2,3,4,5,0 };
   
    
-  xpkerrno=0;
   c = src + 20;
   
   while (len) {
@@ -181,10 +170,8 @@ static int unpack(byte *src, byte *dst, int len) {
 	lchk=xchecksum((ULONG*)(c),(cp+3)>>2);
     c[cp+2]=bc1;c[cp+1]=bc2;c[cp]=bc3;
 	/*fprintf(stderr,"c=%x type=%02x chk=%04x cp=%04x cup1=%04x chk=%04x\n",c-osrc-8,type,u,cp,cup1,lchk);*/
-	if (lchk != u) {
-		xpkerrno=XPKERR_CHKSUM;
-		return(decrunched);		
-	}
+	if (lchk != u)
+		return decrunched;		
 
 	if (type == 0 ) {
 	  /* RAW chunk */
@@ -196,10 +183,8 @@ static int unpack(byte *src, byte *dst, int len) {
 	  continue;
 	}
 	  
-	if (type != 1) {
-	  xpkerrno=XPKERR_UNKNOWNTYPE;
-	  return(decrunched);
-	}
+	if (type != 1)
+	  return decrunched;
 
     len -= cup1;
 	decrunched+=cup1;;
@@ -271,7 +256,7 @@ l74c:	d6 = d2;
     */
     dst = a6;
   }
-  return(decrunched);
+  return decrunched;
 
 l75a:	d0 += 1;
 	if (bfextu(src,d0,1)) goto l766;
@@ -519,14 +504,10 @@ data_a3	dc.l	$2030405
 */
 
 
-int decrunch_sqsh (FILE *f, FILE *fo)
+int decrunch_sqsh (FILE *in, FILE *out)
 {
-    if (fo == NULL)
-        return -1;
-
-    if (unsqsh (f, fo) < 0)
+    if (unsqsh (in, out) < 0)
 	return -1;
 
     return 0;
 }
-#endif

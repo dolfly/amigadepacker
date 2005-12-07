@@ -22,12 +22,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "decrunch.h"
-
-
-int decrunch_sqsh (FILE *, FILE *);
-int decrunch_pp (FILE *, FILE *, char *filename);
-int decrunch_mmcmp (FILE *, FILE *);
+#include "ppdepack.h"
 
 
 enum {
@@ -40,7 +37,6 @@ enum {
 int decrunch (FILE *out, FILE *in, char *s)
 {
     unsigned char b[12];
-    FILE *t;
     int builtin, res;
     char *packer;
     size_t nbytes;

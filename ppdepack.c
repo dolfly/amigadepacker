@@ -28,31 +28,30 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-
-#include "../config.h"
-#include "../osdep/strl.c"
+#include <stdint.h>
 
 
-size_t filelen;
+static size_t filelen;
 
 
-int savefile(FILE *fo, void *mem, size_t length) {
+int savefile(FILE *fo, void *mem, size_t length)
+{
   int ok = fo && (fwrite(mem, 1, length, fo) == length);
   return ok;
 }
 
 
-typedef unsigned char UBYTE;
-typedef unsigned int ULONG;
+typedef uint8_t UBYTE;
+typedef uint32_t ULONG;
 
-ULONG key_start = 0;
+static ULONG key_start = 0;
 
-/* char output_name[512]; */
 
-unsigned int key_match = 0;
-char filename_match[512]="";
+static unsigned int key_match = 0;
 
-inline void ppDecryptCopy(UBYTE *src, UBYTE *dest, ULONG len, ULONG key) {
+
+inline void ppDecryptCopy(UBYTE *src, UBYTE *dest, ULONG len, ULONG key)
+{
   UBYTE a = (key>>24) & 0xFF;
   UBYTE b = (key>>16) & 0xFF;
   UBYTE c = (key>> 8) & 0xFF;
@@ -206,19 +205,14 @@ int ppcrack(FILE *fo, UBYTE *data, ULONG len, char *filename) {
 
   filename = filename; /* no warning */
 
-  if (sizeof(ULONG) != 4) {
-    fprintf(stderr, "uade: architecture warning in ppcrack: ULONG is not 4 bytes\n");
-    fprintf(stderr, "uade: this risk will only affect powerpacker packed files\n");
-  }
-
   if (len < 16) {
-    fprintf(stderr, "file is too short to be a PP file (%u bytes)\n", len);
+    fprintf(stderr, "File is too short to be a PP file (%u bytes)\n", len);
     return -1;
   }
 
   if (data[0]=='P' && data[1]=='P' && data[2]=='2' && data[3]=='0') {
     if (len & 0x03) {
-      fprintf(stderr, "file length is not a multiple of 4\n");
+      fprintf(stderr, "File length is not a multiple of 4\n");
       return -1;
     }
     crypted = 0;
@@ -231,7 +225,7 @@ int ppcrack(FILE *fo, UBYTE *data, ULONG len, char *filename) {
     crypted = 1;
   }
   else {
-    fprintf(stderr, "file does not have the PP signature\n");
+    fprintf(stderr, "File does not have the PP signature\n");
     return -1;
   }
 
@@ -308,7 +302,6 @@ int ppcrack(FILE *fo, UBYTE *data, ULONG len, char *filename) {
         fprintf(stderr, "key %08x success!\n", key);
 	ppDecrunch(temp, output, &data[6], len-14, outlen, data[len-1]);
 
-	strlcpy (filename_match, filename, sizeof(filename_match));
 	key_match = key;
         /* sprintf(output_name, "%s.%08x", name, key); */
 	
@@ -328,25 +321,22 @@ return success;
 }
 
 
-int decrunch_pp (FILE *fd, FILE *fo, char *filename)
+int decrunch_pp (FILE *f, FILE *fo, char *filename)
 {
   int success;
   void *mem = NULL;
 
-  if ((fseek(fd, 0, SEEK_END) == 0) && (filelen = ftell(fd))
-      &&  (fseek(fd, 0, SEEK_SET) == 0) && (mem = malloc(filelen))) {
-    if (fread(mem, 1, filelen, fd) < filelen) { free(mem); mem = NULL; }
+  if (fseek(f, 0, SEEK_END) == 0 && (filelen = ftell(f)) &&
+      fseek(f, 0, SEEK_SET) == 0 && (mem = malloc(filelen))) {
+    if (fread(mem, 1, filelen, f) < filelen) {
+      free(mem);
+      mem = NULL;
+      return -1;
+    }
   }
 
-  if (!strcmp (filename, filename_match)) {
-      key_start = key_match;
-      /* fprintf(stderr, "\norg:   %s", filename);
-	 fprintf(stderr, "\nmatch: %s, %08x\n", filename,key_match);
-      */
-  } else {
-    key_start = 0;
-  }
-    
+  key_start = 0;
+
   success = ppcrack(fo, (UBYTE *) mem, (int) filelen, filename);
   free(mem);
   return success;
