@@ -6,7 +6,7 @@ MODULES= main.o decrunch.o ppdepack.o mmcmp.o unsqsh.o
 amigadepacker:	$(MODULES)
 	$(CC) -o $@ $(MODULES)
 
-main.o:	main.c decrunch.h
+main.o:	main.c decrunch.h version.h
 	$(CC) $(CFLAGS) -c $<
 
 decrunch.o:	decrunch.c decrunch.h ppdepack.h

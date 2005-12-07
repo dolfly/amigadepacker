@@ -3,6 +3,7 @@
 #include <getopt.h>
 #include <string.h>
 
+#include "version.h"
 #include "decrunch.h"
 
 int main(int argc, char **argv)
@@ -13,17 +14,31 @@ int main(int argc, char **argv)
     struct option long_options[] = {
 	{"help", 0, NULL, 'd'},
 	{"stdout", 0, NULL, 'c'},
+	{"version", 0, NULL, 'v'},
 	{NULL, 0, NULL, 0}
     };
 
-    while ((ret = getopt_long(argc, argv, "ch", long_options, 0)) != -1) {
+    while ((ret = getopt_long(argc, argv, "chv", long_options, 0)) != -1) {
 	switch (ret) {
 	case 'c':
 	    use_stdout = 1;
 	    break;
 	case 'h':
+	    printf("\n");
 	    printf("Usage: amigadepacker [-h] FILE ...\n");
+	    printf("\n");
+	    printf("Example 1: Depack file:\n");
+	    printf("\tamigadepacker foo\n");
+	    printf("\n");
+	    printf("Example 2: Depack file from stdin to stdout:\n");
+	    printf("\tamigadepacker -c < foo > outfile\n");
+	    printf("\n");
 	    return 0;
+	case 'v':
+	    printf("\n");
+	    printf("amigadepacker v%s by Heikki Orsila <heikki.orsila@iki.fi>\n", VERSION);
+	    printf("Web page: http://www.iki.fi/shd/foss/amigadepacker/\n");
+	    printf("\n");
 	case '?':
 	case ':':
 	    exit(-1);

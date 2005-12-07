@@ -1,6 +1,7 @@
 #!/bin/sh
 
 prefix=/usr/local
+version="0.01"
 
 for opt in "$@" ; do
 	case $opt in
@@ -14,7 +15,7 @@ for opt in "$@" ; do
 		echo ""
 		echo "Valid options are:"
 		echo "--prefix=dir           Install to prefix 'dir'"
- 		echo "--package-prefix=dest  pretend to install to the prefix,"
+ 		echo "--package-prefix=dest  Pretend to install to the prefix,"
 		echo "                       but copy files to 'dest/prefix' on make install"
 		exit
 		;;
@@ -26,6 +27,8 @@ if test ! -z "$packageprefix" ; then
 fi
 
 sed -e "s|{PREFIX}|$prefix|g" < Makefile.in > Makefile
+
+echo "#define VERSION \"$version\"" > version.h
 
 echo "Would install amigadepacker binary to directory $prefix/bin."
 echo ""

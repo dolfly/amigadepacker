@@ -59,19 +59,6 @@ int decrunch(const char *filename, FILE *out)
 	in = stdin;
     }
 
-    if (out != stdout) {
-	int fd;
-	snprintf(dstname, sizeof dstname, "%s.XXXXXX", filename);
-	if ((fd = mkstemp(dstname)) < 0) {
-	    fprintf(stderr, "Could not create a temporary file: %s (%s)\n", dstname, strerror(errno));
-	    goto error;
-	}
-	if ((out = fdopen(fd, "w")) == NULL) {
-	    fprintf(stderr, "Could not fdopen temporary file: %s\n", dstname);
-	    goto error;
-	}
-    }
-
     packer = NULL;
     builtin = 0;
 
@@ -97,6 +84,24 @@ int decrunch(const char *filename, FILE *out)
 
     if (!packer)
 	goto error;
+
+    if (filename[0])
+      fprintf(stderr, "File %s is in %s format.\n", filename, packer);
+    else
+      fprintf(stderr, "Stream is in %s format.\n", packer);
+
+    if (out != stdout) {
+	int fd;
+	snprintf(dstname, sizeof dstname, "%s.XXXXXX", filename);
+	if ((fd = mkstemp(dstname)) < 0) {
+	    fprintf(stderr, "Could not create a temporary file: %s (%s)\n", dstname, strerror(errno));
+	    goto error;
+	}
+	if ((out = fdopen(fd, "w")) == NULL) {
+	    fprintf(stderr, "Could not fdopen temporary file: %s\n", dstname);
+	    goto error;
+	}
+    }
 
     res = 0;
     switch (builtin) {

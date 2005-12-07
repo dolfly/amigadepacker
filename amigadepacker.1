@@ -32,6 +32,11 @@ Unpack a file from stdin to stdout:
 .ft B
 cat foo |amigadepacker -c > foo.depacked
 
+.ft R
+Unpack all files under /path:
+.ft B
+find /path/ -type f -print0 |xargs -0 amigadepacker
+
 .SH AUTHOR
 .B amigadepacker
 was written by Heikki Orsila <heikki.orsila@iki.fi>. Decompressor for
