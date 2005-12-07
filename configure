@@ -12,9 +12,9 @@ for opt in "$@" ; do
 		;;
 	--help)
 		echo ""
-		echo "Valid options are:"
+		echo "valid options are:"
 		echo "--prefix=dir           Install to prefix 'dir'"
- 		echo "--package-prefix=dest  Pretend to install to the prefix,"
+ 		echo "--package-prefix=dest  pretend to install to the prefix,"
 		echo "                       but copy files to 'dest/prefix' on make install"
 		exit
 		;;
