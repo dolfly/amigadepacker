@@ -2,6 +2,7 @@ CC= gcc
 CFLAGS= -Wall -O2 -g
 LDFLAGS=
 MODULES= main.o decrunch.o ppdepack.o mmcmp.o unsqsh.o
+RELDIR=amigadepacker-{VERSION}
 
 amigadepacker:	$(MODULES)
 	$(CC) -o $@ $(MODULES)
@@ -26,9 +27,11 @@ install:	amigadepacker
 	install amigadepacker {PREFIX}/bin/
 
 release:	
-	rm -rf amigadepacker-{VERSION}
-	mkdir amigadepacker-{VERSION}
-	cp COPYING COPYING.GPL ChangeLog Makefile.in README *.1 configure *.c *.h amigadepacker-{VERSION}/
+	rm -rf $(RELDIR)
+	mkdir -p $(RELDIR)/tests
+	cp COPYING COPYING.GPL ChangeLog Makefile.in README *.1 configure *.c *.h $(RELDIR)/
+	cp tests/check.sh tests/pp20* tests/sqsh* $(RELDIR)/tests/
+	rm -f $(RELDIR)/version.h
 
 check:	amigadepacker
 	cd tests && ./check.sh
