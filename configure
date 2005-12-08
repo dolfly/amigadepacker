@@ -26,7 +26,7 @@ if test ! -z "$packageprefix" ; then
     prefix="$packageprefix/$prefix"
 fi
 
-sed -e "s|{PREFIX}|$prefix|g" < Makefile.in > Makefile
+sed -e "s|{PREFIX}|$prefix|g" -e "s|{VERSION}|$version|" < Makefile.in > Makefile
 
 echo "#define VERSION \"$version\"" > version.h
 

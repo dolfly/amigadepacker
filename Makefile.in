@@ -25,6 +25,11 @@ install:	amigadepacker
 	mkdir -p {PREFIX}/bin
 	install amigadepacker {PREFIX}/bin/
 
+release:	
+	rm -rf amigadepacker-{VERSION}
+	mkdir amigadepacker-{VERSION}
+	cp COPYING COPYING.GPL ChangeLog Makefile.in README *.1 configure *.c *.h amigadepacker-{VERSION}/
+
 check:	amigadepacker
 	cd tests && ./check.sh
 
