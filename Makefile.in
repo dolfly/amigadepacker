@@ -25,6 +25,8 @@ unsqsh.o:	unsqsh.c unsqsh.h
 install:	amigadepacker
 	mkdir -p {PREFIX}/bin
 	install amigadepacker {PREFIX}/bin/
+	mkdir -p {PREFIX}/share/man/man1
+	install amigadepacker.1 {PREFIX}/share/man/man1/
 
 release:	
 	rm -rf $(RELDIR)
