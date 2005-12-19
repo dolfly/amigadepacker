@@ -1,3 +1,6 @@
+2005-12-13  Heikki Orsila <heikki.orsila@iki.fi>
+	- Fixed --help to work.
+
 2005-12-08  Heikki Orsila <heikki.orsila@iki.fi>
 	* Version 0.01
 	- \o/

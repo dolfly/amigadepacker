@@ -13,7 +13,7 @@ int main(int argc, char **argv)
     int pretend = 0;
 
     struct option long_options[] = {
-	{"help", 0, NULL, 'd'},
+	{"help", 0, NULL, 'h'},
 	{"pretend", 0, NULL, 'p'},
 	{"stdout", 0, NULL, 'c'},
 	{"version", 0, NULL, 'v'},
