@@ -32,12 +32,14 @@
 #include "ppdepack.h"
 #include "unsqsh.h"
 #include "mmcmp.h"
+#include "s404_dec.h"
 
 
 enum {
     BUILTIN_PP = 1,
     BUILTIN_SQSH,
-    BUILTIN_MMCMP
+    BUILTIN_MMCMP,
+    BUILTIN_S404
 };
 
 
@@ -78,6 +80,9 @@ int decrunch(const char *filename, FILE *out, int pretend)
 	b[4] == 'O' && b[5] == 'N' && b[6] == 'i' && b[7] == 'a') {
 	packer = "MMCMP";
 	builtin = BUILTIN_MMCMP;
+    } else if (nbytes >= 16 && b[0] == 'S' && b[1] == '4' && b[2] == '0' && b[3] == '4') {
+	packer ="S404";
+	builtin = BUILTIN_S404;
     }
 
     fseek (in, 0, SEEK_SET);
@@ -86,9 +91,9 @@ int decrunch(const char *filename, FILE *out, int pretend)
 	goto error;
 
     if (filename[0])
-      fprintf(stderr, "File %s is in %s format.\n", filename, packer);
+	fprintf(stderr, "File %s is in %s format.\n", filename, packer);
     else
-      fprintf(stderr, "Stream is in %s format.\n", packer);
+	fprintf(stderr, "Stream is in %s format.\n", packer);
 
     if (pretend)
       return 0;
@@ -109,14 +114,17 @@ int decrunch(const char *filename, FILE *out, int pretend)
     res = 0;
     switch (builtin) {
     case BUILTIN_PP:    
-      res = decrunch_pp (in, out);
-      break;
+	res = decrunch_pp (in, out);
+	break;
     case BUILTIN_SQSH:    
-      res = decrunch_sqsh (in, out);
-      break;
+	res = decrunch_sqsh (in, out);
+	break;
     case BUILTIN_MMCMP:    
-      res = decrunch_mmcmp (in, out);
-      break;
+	res = decrunch_mmcmp (in, out);
+	break;
+    case BUILTIN_S404:
+	res = decrunch_s404(in, out);
+	break;
     }
 
     if (res < 0)

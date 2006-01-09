@@ -74,14 +74,17 @@ size_t checkS404File( FILE *fh, int32_t *oLen, int32_t *pLen, int32_t *sLen )
   if (fread(buf, 1, sizeof buf, fh) != sizeof buf)
     return -1;
   if (memcmp(buf, "S404", 4))
-    return -2;
+    return -1;
 
   *sLen = ntohl(* (uint32_t *) &buf[4]);
-  assert(*sLen >= 0);
+  if (*sLen < 0)
+    return -1;
   *oLen = ntohl(* (uint32_t *) &buf[8]); /* Depacked length */
-  assert(*oLen >= 0);
+  if (*oLen < 0)
+    return -1;
   *pLen = ntohl(* (uint32_t *) &buf[12]); /* Packed length */
-  assert(*pLen >= 0);
+  if (*pLen < 0)
+    return -1;
 
   return len - 16;
 }
@@ -246,81 +249,58 @@ void decompressS404(uint8_t *src, uint8_t *orgdst,
 }
 
 
-
-
-int main( int argc, char **argv )
+int decrunch_s404(FILE *in, FILE *out)
 {
   int32_t oLen, sLen, pLen;
-  uint8_t *src;
-  uint8_t *dst;
-  size_t n;
-  FILE *fh;
+  uint8_t *src = NULL;
+  uint8_t *dst = NULL;
+  size_t n, nwrite;
 
-  if (argc != 3) {
-    fprintf(stderr,"Usage: %s infile outfile\n", argv[0]);
-    exit(EXIT_FAILURE);
+  if ((n = checkS404File(in, &oLen, &pLen, &sLen)) < 0) {
+    fprintf(stderr,"S404 Error: checkS404File() failed..\n");
+    goto error;
   }
 
-  if ((fh = fopen(argv[1], "rb")) == NULL) {
-    fprintf(stderr,"** Error: fopen(%s) failed..\n",argv[1]);
-    exit(EXIT_FAILURE);
-  }
-
-  if ((n = checkS404File(fh, &oLen, &pLen, &sLen)) < 0) {
-    fprintf(stderr,"** Error: checkS404File() failed..\n");
-    fclose(fh);
-    exit(EXIT_FAILURE);
-  }
-
-  printf("%s is a S404 compressed file\n", argv[1]);
-  printf("\tOriginal length: %d\n", oLen);
-  printf("\tCompressed length: %d\n", pLen);
-  printf("\tSecurity length: %d\n", sLen);
-  printf("\tRead length: %zd\n", n);
+  fprintf(stderr, "\tOriginal length: %d\n", oLen);
+  fprintf(stderr, "\tCompressed length: %d\n", pLen);
+  fprintf(stderr, "\tSecurity length: %d\n", sLen);
 
   if ((src = malloc(n)) == NULL) {
-    fprintf(stderr,"** Error: malloc(%zd) failed..\n", n);
-    fclose(fh);
-    exit(EXIT_FAILURE);
+    fprintf(stderr,"S404 Error: malloc(%zd) failed..\n", n);
+    goto error;
   }
   if ((dst = malloc(oLen)) == NULL) {
-    fprintf(stderr,"** Error: malloc(%d) failed..\n",oLen);
-    free(src);
-    fclose(fh);
-    exit(EXIT_FAILURE);
-  }
-  if (fread(src,1,n,fh) != n) {
-    fprintf(stderr,"** Error: fread() failed..\n");
-    free(src);
-    free(dst);
-    fclose(fh);
-    exit(EXIT_FAILURE);
+    fprintf(stderr,"S404 Error: malloc(%d) failed..\n",oLen);
+    goto error;
   }
 
-  fclose(fh);
-
-  if ((fh = fopen(argv[2], "wb")) == NULL) {
-    fprintf(stderr,"** Error: fopen(%s) failed..\n",argv[2]);
-    free(src);
-    free(dst);
-    exit(EXIT_FAILURE);
+  while (n > 0) {
+    ssize_t nread = fread(src, 1, n, in);
+    if (nread <= 0) {
+      fprintf(stderr,"S404 Error: fread() failed..\n");
+      goto error;
+    }
+    n -= nread;
   }
 
   decompressS404(src, dst, oLen, pLen);
 
-  if (fwrite(dst, 1, oLen, fh) != oLen) {
-    fprintf(stderr,"** Error: fwrite() failed..\n");
-    free(src);
-    free(dst);
-    fclose(fh);
-    exit(EXIT_FAILURE);
+  nwrite = oLen;
+  while (nwrite > 0) {
+    ssize_t wret = fwrite(dst, 1, oLen, out);
+    if (wret <= 0) {
+      fprintf(stderr,"S404 Error: fwrite() failed..\n");
+      goto error;
+    }
+    nwrite -= wret;
   }
-
-  printf("Done...\n");
 
   free(src);
   free(dst);
-  fclose(fh);
-
   return 0;
+
+ error:
+  free(src);
+  free(dst);
+  return -1;
 }
