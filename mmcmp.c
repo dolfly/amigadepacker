@@ -15,6 +15,9 @@
 
 #include <sys/stat.h>
 #include <unistd.h>
+
+
+#include "mmcmp.h"
 #include "decrunch.h"
 
 
@@ -300,26 +303,14 @@ static int mmcmp_unpack(uint8_t **ppMemFile, uint32_t *pdwMemLength)
 }
 
 
-int decrunch_mmcmp (FILE *in, FILE *out)                          
-{                                                          
-	struct stat st;
-	uint8_t *buf;
-	uint32_t s;
+int decrunch_mmcmp (uint8_t *src, size_t newsize, FILE *out)
+{
+  uint32_t size = newsize;
 
-	if (fstat(fileno(in), &st))
-		return -1;
+  mmcmp_unpack(&src, &size);
 
-	buf = malloc((s = st.st_size));
-	if (fread (buf, 1, s, in) != s) {
-	  fprintf(stderr, "mmcmp: Could not read whole file.\n");
-	  return -1;
-	}
+  if (atomic_fwrite(out, src, size) == 0)
+    return -1;
 
-	mmcmp_unpack(&buf, &s);
-
-	fwrite (buf, 1, s, out);
-
-	free (buf);
-
-	return 0;
+  return 0;
 }

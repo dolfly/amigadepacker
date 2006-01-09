@@ -28,8 +28,16 @@ if test "$md5" != "5f7c2705f9257eb65e38edbc08028375" ; then
     res="-1"
 fi
 
+name="Test 4"
+file="aon.wingsofdeath1.stc"
+md5="`$prog -c < $file |md5sum |cut -d ' ' -f1`"
+if test "$md5" != "ab45d5c5427617d6ee6e4260710edaf1" ; then
+    echo $name error
+    res="-1"
+fi
+
 if test "$1" = "--enc" ; then
-    name="Test 2 encrypted"
+    name="Test 1 encrypted"
     file="pp20_enc_1"
     # The correct pp key will be 092510ce (takes less than an hour to break)
     md5="`$prog -c < $file |md5sum |cut -d ' ' -f1`"

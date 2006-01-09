@@ -1,6 +1,9 @@
 #ifndef _PPDEPACK_H_
 #define _PPDEPACK_H_
 
-int decrunch_pp(FILE *f, FILE *fo);
+#include <stdio.h>
+#include <stdint.h>
+
+int decrunch_pp(uint8_t *src, size_t s, FILE *fo);
 
 #endif

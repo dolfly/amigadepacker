@@ -43,17 +43,56 @@ enum {
 };
 
 
+size_t atomic_fread(void *dst, FILE *f, size_t count)
+{
+    uint8_t *p = (uint8_t *) dst;
+    size_t left = count;
+
+    while (left > 0) {
+	ssize_t nread = fread(p, 1, left, f);
+	if (nread <= 0) {
+	    fprintf(stderr, "atomic_fread() failed: %s\n", strerror(errno));
+	    return 0;
+	}
+	left -= nread;
+	p += nread;
+    }
+
+    return count;
+}
+
+
+size_t atomic_fwrite(FILE *f, void *src, size_t count)
+{
+    uint8_t *p = (uint8_t *) src;
+    size_t left = count;
+
+    while (left > 0) {
+	ssize_t nwrite = fwrite(p, 1, left, f);
+	if (nwrite <= 0) {
+	    fprintf(stderr, "atomic_fwrite() failed: %s\n", strerror(errno));
+	    return 0;
+	}
+	left -= nwrite;
+	p += nwrite;
+    }
+
+    return count;
+}
+
+
 int decrunch(const char *filename, FILE *out, int pretend)
 {
-    uint8_t b[12];
+    uint8_t b[16];
     int builtin, res;
     char *packer;
     size_t nbytes;
     FILE *in;
     char dstname[PATH_MAX] = "";
+    uint8_t *buf = NULL;
 
     if (filename[0]) {
-	if ((in = fopen(filename, "r")) == NULL) {
+	if ((in = fopen(filename, "rb")) == NULL) {
 	    fprintf(stderr, "Unknown file %s\n", filename);
 	    goto error;
 	}
@@ -65,7 +104,7 @@ int decrunch(const char *filename, FILE *out, int pretend)
     builtin = 0;
 
     nbytes = fread(b, 1, sizeof b, in);
-    if (nbytes < 12)
+    if (nbytes < sizeof b)
 	goto error;
 
     if ((b[0] == 'P' && b[1] == 'X' && b[2] == '2' && b[3] == '0') ||
@@ -80,12 +119,10 @@ int decrunch(const char *filename, FILE *out, int pretend)
 	b[4] == 'O' && b[5] == 'N' && b[6] == 'i' && b[7] == 'a') {
 	packer = "MMCMP";
 	builtin = BUILTIN_MMCMP;
-    } else if (nbytes >= 16 && b[0] == 'S' && b[1] == '4' && b[2] == '0' && b[3] == '4') {
+    } else if (nbytes >= 16 && b[0] == 'S' && b[1] == '4' && b[2] == '0' && b[3] == '4' && b[4] < 0x80 && b[8] < 0x80 && b[12] < 0x80) {
 	packer ="S404";
 	builtin = BUILTIN_S404;
     }
-
-    fseek (in, 0, SEEK_SET);
 
     if (!packer)
 	goto error;
@@ -97,6 +134,42 @@ int decrunch(const char *filename, FILE *out, int pretend)
 
     if (pretend)
       return 0;
+
+    if (in == stdin) {
+	size_t bsize = 4096;
+
+	if ((buf = malloc(bsize)) == NULL)
+	    goto error;
+
+	memcpy(buf, b, nbytes);
+
+	while (1) {
+	    size_t n;
+	    if (nbytes == bsize) {
+		uint8_t *newbuf;
+		bsize *= 2;
+		if ((newbuf = realloc(buf, bsize)) == NULL)
+		    goto error;
+		buf = newbuf;
+	    }
+	    n = fread(&buf[nbytes], 1, bsize - nbytes, in);
+	    if (n <= 0)
+		break;
+	    nbytes += n;
+	}
+
+    } else {
+	fseek(in, 0, SEEK_END);
+	nbytes = ftell(in);
+	fseek(in, 0, SEEK_SET);
+	if ((buf = malloc(nbytes)) == NULL)
+	    goto error;
+	if (atomic_fread(buf, in, nbytes) == 0)
+	    goto error;
+    }
+    
+    if (nbytes <= sizeof b)
+      goto error;
 
     if (out != stdout) {
 	int fd;
@@ -114,18 +187,21 @@ int decrunch(const char *filename, FILE *out, int pretend)
     res = 0;
     switch (builtin) {
     case BUILTIN_PP:    
-	res = decrunch_pp (in, out);
+	res = decrunch_pp (buf, nbytes, out);
 	break;
     case BUILTIN_SQSH:    
-	res = decrunch_sqsh (in, out);
+	res = decrunch_sqsh (buf, nbytes, out);
 	break;
     case BUILTIN_MMCMP:    
-	res = decrunch_mmcmp (in, out);
+	res = decrunch_mmcmp (buf, nbytes, out);
 	break;
     case BUILTIN_S404:
-	res = decrunch_s404(in, out);
+	res = decrunch_s404(buf, nbytes, out);
 	break;
     }
+
+    free(buf);
+    buf = NULL;
 
     if (res < 0)
       goto error;
@@ -147,5 +223,7 @@ int decrunch(const char *filename, FILE *out, int pretend)
       fclose(out);
     if (dstname[0])
 	unlink(dstname);
+    if (buf)
+	free(buf);
     return -1;
 }

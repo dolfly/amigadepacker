@@ -16,6 +16,9 @@
 #include <netinet/in.h>
 #include <assert.h>
 
+#include "s404_dec.h"
+#include "decrunch.h"
+
 
 static int _bc;
 static uint32_t _bb;
@@ -62,18 +65,13 @@ uint16_t getb(uint8_t **b, int l)
 
 /* Returns bytes still to read.. or < 0 if error. */
 
-size_t checkS404File( FILE *fh, int32_t *oLen, int32_t *pLen, int32_t *sLen )
+size_t checkS404File(uint8_t *buf, size_t len,
+		     int32_t *oLen, int32_t *pLen, int32_t *sLen )
 {
-  uint8_t buf[16];
-  size_t len;
-
-  fseek(fh, 0, SEEK_END);
-  len = ftell(fh);
-  fseek(fh, 0, SEEK_SET);
-
-  if (fread(buf, 1, sizeof buf, fh) != sizeof buf)
+  if (len < 16)
     return -1;
-  if (memcmp(buf, "S404", 4))
+
+  if (memcmp(buf, "S404", 4) != 0)
     return -1;
 
   *sLen = ntohl(* (uint32_t *) &buf[4]);
@@ -249,58 +247,39 @@ void decompressS404(uint8_t *src, uint8_t *orgdst,
 }
 
 
-int decrunch_s404(FILE *in, FILE *out)
+int decrunch_s404(uint8_t *src, size_t s, FILE *out)
 {
   int32_t oLen, sLen, pLen;
-  uint8_t *src = NULL;
   uint8_t *dst = NULL;
-  size_t n, nwrite;
+  size_t n;
 
-  if ((n = checkS404File(in, &oLen, &pLen, &sLen)) < 0) {
+  if ((n = checkS404File(src, s, &oLen, &pLen, &sLen)) == -1) {
     fprintf(stderr,"S404 Error: checkS404File() failed..\n");
     goto error;
   }
 
-  fprintf(stderr, "\tOriginal length: %d\n", oLen);
-  fprintf(stderr, "\tCompressed length: %d\n", pLen);
-  fprintf(stderr, "\tSecurity length: %d\n", sLen);
+  /* fprintf(stderr, "\tOriginal length: %d\n", oLen);
+     fprintf(stderr, "\tCompressed length: %d\n", pLen);
+     fprintf(stderr, "\tSecurity length: %d\n", sLen);
+  */
 
-  if ((src = malloc(n)) == NULL) {
-    fprintf(stderr,"S404 Error: malloc(%zd) failed..\n", n);
-    goto error;
-  }
   if ((dst = malloc(oLen)) == NULL) {
-    fprintf(stderr,"S404 Error: malloc(%d) failed..\n",oLen);
+    fprintf(stderr,"S404 Error: malloc(%d) failed..\n", oLen);
     goto error;
   }
 
-  while (n > 0) {
-    ssize_t nread = fread(src, 1, n, in);
-    if (nread <= 0) {
-      fprintf(stderr,"S404 Error: fread() failed..\n");
-      goto error;
-    }
-    n -= nread;
-  }
+  /* src + 16 skips S404 header */
+  decompressS404(src + 16, dst, oLen, pLen);
 
-  decompressS404(src, dst, oLen, pLen);
-
-  nwrite = oLen;
-  while (nwrite > 0) {
-    ssize_t wret = fwrite(dst, 1, oLen, out);
-    if (wret <= 0) {
+  if (atomic_fwrite(out, dst, oLen) == 0) {
       fprintf(stderr,"S404 Error: fwrite() failed..\n");
       goto error;
-    }
-    nwrite -= wret;
   }
 
-  free(src);
   free(dst);
   return 0;
 
  error:
-  free(src);
   free(dst);
   return -1;
 }

@@ -15,6 +15,10 @@
 #include <string.h>
 
 #include <stdint.h>
+#include <netinet/in.h>
+
+#include "unsqsh.h"
+#include "decrunch.h"
 
 
 #define XPKERR_CHKSUM 1
@@ -27,55 +31,46 @@ typedef uint32_t ULONG;
  
 static int unpack(byte *src, byte *dst, int len);
 
-static int unsqsh(FILE *in, FILE *out)
+
+int decrunch_sqsh (uint8_t *src, size_t s, FILE *out)
 {
-  unsigned char *src;
-  unsigned char *dst;
+  unsigned char *newsrc = NULL;
+  unsigned char *dst = NULL;
   int srclen;
   int dstlen;
 
-  if ('X' != fgetc (in) ||
-      'P' != fgetc (in) ||
-      'K' != fgetc (in) ||
-      'F' != fgetc (in)) {
-    return -1;
-  }
-
-  srclen  = fgetc (in); srclen <<= 8;
-  srclen |= fgetc (in); srclen <<= 8;
-  srclen |= fgetc (in); srclen <<= 8;
-  srclen |= fgetc (in);
-
-  if ('S' != fgetc (in) ||
-      'Q' != fgetc (in) ||
-      'S' != fgetc (in) ||
-      'H' != fgetc (in)) {
-    return -1;
-  }
-
-  dstlen  = fgetc (in); dstlen <<= 8;
-  dstlen |= fgetc (in); dstlen <<= 8;
-  dstlen |= fgetc (in); dstlen <<= 8;
-  dstlen |= fgetc (in);
- 
-  src=(unsigned char*)malloc(srclen+3);
-  dst=(unsigned char*)malloc(dstlen+100);
-  if (src==NULL || dst==NULL)
+  if (memcmp(src, "XPKF", 4) != 0)
     return -1;
 
-  if (1 != fread(src,srclen-8,1,in))
+  srclen = ntohl(* (uint32_t *) &src[4]);
+
+  if (memcmp(&src[8], "SQSH", 4) != 0)
     return -1;
 
-  if (unpack(src,dst,dstlen)!=dstlen)
-    return -1;
+  dstlen = ntohl(* (uint32_t *) &src[12]);
 
-  if (1 != fwrite(dst,dstlen,1,out))
-    return -1;
+  newsrc = (unsigned char *) malloc(srclen + 3);
+  dst = (unsigned char*) malloc(dstlen + 100);
+
+  if (newsrc == NULL || dst == NULL)
+    goto error;
+
+  memcpy(newsrc, src + 16, srclen - 8);
+
+  if (unpack(src + 16, dst, dstlen) != dstlen)
+    goto error;
+
+  if (atomic_fwrite(out, dst, dstlen) == 0)
+    goto error;
     
-  free(src);
+  free(newsrc);
   free(dst);
-
   return 0;
+
+ error:
+  free(newsrc);
+  free(dst);
+  return -1;
 }
 
 static UWORD xchecksum(ULONG* ptr, ULONG count)
@@ -502,12 +497,3 @@ data_a3	dc.l	$2030405
 	dc.b	0
 
 */
-
-
-int decrunch_sqsh (FILE *in, FILE *out)
-{
-    if (unsqsh (in, out) < 0)
-	return -1;
-
-    return 0;
-}

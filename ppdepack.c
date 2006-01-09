@@ -30,10 +30,10 @@
 #include <string.h>
 #include <stdint.h>
 
+#include "ppdepack.h"
+#include "decrunch.h"
+
 #define WANT_PP2X_DECRYPTING
-
-static size_t filelen;
-
 
 int savefile(FILE *fo, void *mem, size_t length)
 {
@@ -317,23 +317,10 @@ return success;
 }
 
 
-int decrunch_pp (FILE *f, FILE *fo)
+int decrunch_pp (uint8_t *src, size_t s, FILE *fo)
 {
   int success;
-  void *mem = NULL;
-
-  if (fseek(f, 0, SEEK_END) == 0 && (filelen = ftell(f)) &&
-      fseek(f, 0, SEEK_SET) == 0 && (mem = malloc(filelen))) {
-    if (fread(mem, 1, filelen, f) < filelen) {
-      free(mem);
-      mem = NULL;
-      return -1;
-    }
-  }
-
   key_start = 0;
-
-  success = ppcrack(fo, (UBYTE *) mem, filelen);
-  free(mem);
+  success = ppcrack(fo, (UBYTE *) src, s);
   return success;
 }
