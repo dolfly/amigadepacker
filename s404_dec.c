@@ -24,9 +24,14 @@ static uint8_t *_org_src;
 int initGetb(uint8_t **b)
 {
   int eff;
-  _bc = (*b)[0]; _bc <<= 8; _bc |= (*b)[1]; *b -= 2;    /* bit counter */
-  _bb = (*b)[0]; _bb <<= 8; _bb |= (*b)[1]; *b -= 2;    /* last short  */
-  eff = (*b)[0]; eff <<= 8; eff |= (*b)[1]; *b -= 2;    /* efficiency */
+  _bc = ntohs(* (uint16_t *) (*b));
+  *b -= 2;    /* bit counter */
+
+  _bb = ntohs(* (uint16_t *) (*b));
+  *b -= 2;    /* last short  */
+
+  eff = ntohs(* (uint16_t *) (*b));
+  *b -= 2;    /* efficiency */
 
   /* check for _bc validity as it may be bugged */
   _bc &= 0x000f;
