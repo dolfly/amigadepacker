@@ -19,6 +19,7 @@
 
 static int _bc;
 static uint32_t _bb;
+static uint8_t *_org_src;
 
 int initGetb(uint8_t **b)
 {
@@ -39,6 +40,8 @@ uint16_t getb(uint8_t **b, int l)
 
   if (_bc < l) {
     _bb <<= _bc;
+
+    assert((intptr_t) *b >= (intptr_t) _org_src);
 
     _bb |= ((*b)[0] << 8);
     _bb |= (*b)[1];
@@ -69,29 +72,35 @@ size_t checkS404File( FILE *fh, int32_t *oLen, int32_t *pLen, int32_t *sLen )
     return -2;
 
   *sLen = ntohl(* (uint32_t *) &buf[4]);
+  assert(*sLen >= 0);
   *oLen = ntohl(* (uint32_t *) &buf[8]); /* Depacked length */
+  assert(*oLen >= 0);
   *pLen = ntohl(* (uint32_t *) &buf[12]); /* Packed length */
+  assert(*pLen >= 0);
 
   return len - 16;
 }
 
 
-void decompressS404(uint8_t *orgsrc, uint8_t *orgdst,
-		    int32_t oLen, int32_t pLen )
+void decompressS404(uint8_t *src, uint8_t *orgdst,
+		    int32_t dst_length, int32_t src_length)
 {
   uint16_t w;
   int32_t eff;
   int32_t n;
-  uint8_t *src, *dst;
+  uint8_t *dst;
+  int32_t oLen = dst_length;
+  int32_t pLen = src_length;
 
-  src = orgsrc + pLen;
+  _org_src = src;
+
+  src += pLen;
   dst = orgdst + oLen;
   eff = initGetb(&src);
 
   /*printf("_bc: %02X, _bb: %04X, eff: %d\n",_bc,_bb,eff);*/
 
   while (oLen > 0) {
-    assert((intptr_t) src >= (intptr_t) orgsrc);
     w = getb(&src, 9);
 
     /*printf("oLen: %d _bc: %02X, _bb: %04X, w: %04X\n",oLen,_bc,_bb,w);*/
@@ -103,13 +112,11 @@ void decompressS404(uint8_t *orgsrc, uint8_t *orgdst,
       oLen--;
     } else if (w == 0x13e || w == 0x13f) {
       w <<= 4;
-      assert((intptr_t) src >= (intptr_t) orgsrc);
       w |= getb(&src, 4);
 
       n = (w & 0x1f) + 14;
       oLen -= n;
       while (n-- > 0) {
-	assert((intptr_t) src >= (intptr_t) orgsrc);
         w = getb(&src, 8);
 
         /*printf("1+001+1111+[4] -> [8] -> %02X\n",w);*/
@@ -124,21 +131,18 @@ void decompressS404(uint8_t *orgsrc, uint8_t *orgdst,
         if (w & 0x20) {
           /* dist 545 -> */
           w = (w & 0x1f) << (eff-5);
-	  assert((intptr_t) src >= (intptr_t) orgsrc);
           w |= getb(&src, eff-5);
           w += 544;
           /* printf("1+1+[1]+1+[%d] -> ",eff); */
         } else if (w & 0x30) {
           // dist 1 -> 32
           w = (w & 0x0f) << 1;
-	  assert((intptr_t) src >= (intptr_t) orgsrc);
           w |= getb(&src,1);
           /* printf("1+1+[1]+01+[5] %d %02X %d %04X-> ",n,w, _bc, _bb); */
         } else {
           /* dist 33 -> 544 */
           w = (w & 0x0f) << 5;
-	  assert((intptr_t) src >= (intptr_t) orgsrc);
-          w |= getb(&src,5);
+          w |= getb(&src, 5);
           w += 32;
           /* printf("1+1+[1]+00+[9] -> "); */
         }
@@ -149,20 +153,17 @@ void decompressS404(uint8_t *orgsrc, uint8_t *orgdst,
         if (w & 0x08) {
           /* dist 545 -> */
           w = (w & 0x07) << (eff-3);
-	  assert((intptr_t) src >= (intptr_t) orgsrc);
           w |= getb(&src,eff-3);
           w += 544;
           /* printf("1+01+[2]+1+[%d] -> ",eff); */
         } else if (w & 0x0c) {
           /* dist 1 -> 32 */
           w = (w & 0x03) << 3;
-	  assert((intptr_t) src >= (intptr_t) orgsrc);
           w |= getb(&src,3);
           /* printf("1+01+[2]+01+[5] -> "); */
         } else {
           /* dist 33 -> 544 */
           w = (w & 0x03) << 7;
-	  assert((intptr_t) src >= (intptr_t) orgsrc);
           w |= getb(&src,7);
           w += 32;
           /* printf("1+01+[2]+00+[9] -> "); */
@@ -173,12 +174,10 @@ void decompressS404(uint8_t *orgsrc, uint8_t *orgdst,
         
         if (w & 0x01) {
           /* dist 545 -> */
-	  assert((intptr_t) src >= (intptr_t) orgsrc);
           w = getb(&src,eff);
           w += 544;
           /* printf("1+001+[4]+1+[%d] -> ",eff); */
         } else {
-	  assert((intptr_t) src >= (intptr_t) orgsrc);
           w = getb(&src,6);
 
           if (w & 0x20) {
@@ -188,7 +187,6 @@ void decompressS404(uint8_t *orgsrc, uint8_t *orgdst,
           } else {
             /* dist 33 -> 544 */
             w <<= 4;
-	    assert((intptr_t) src >= (intptr_t) orgsrc);
             w |= getb(&src,4);
 
             w += 32;
@@ -197,24 +195,20 @@ void decompressS404(uint8_t *orgsrc, uint8_t *orgdst,
         }
       } else {
         w = (w & 0x1f) << 3;
-	assert((intptr_t) src >= (intptr_t) orgsrc);
 	w |= getb(&src,3);
         n = 23;
 
         while (w == 0xff) {
           n += w;
-	  assert((intptr_t) src >= (intptr_t) orgsrc);
           w = getb(&src,8);
         }
         n += w;
 
-	assert((intptr_t) src >= (intptr_t) orgsrc);
         w = getb(&src,7);
 
         if (w & 0x40) {
           /* dist 545 -> */
           w = (w & 0x3f) << (eff - 6);
-	  assert((intptr_t) src >= (intptr_t) orgsrc);
           w |= getb(&src,eff - 6);
 
           w += 544;
@@ -225,7 +219,6 @@ void decompressS404(uint8_t *orgsrc, uint8_t *orgdst,
         } else {
           /* dist 33 -> 544; */
           w <<= 4;
-	  assert((intptr_t) src >= (intptr_t) orgsrc);
 	  w |= getb(&src,4);
 
           w += 32;
@@ -240,7 +233,7 @@ void decompressS404(uint8_t *orgsrc, uint8_t *orgdst,
         /* printf("Copying: %02X\n",dst[w]); */
 	dst--;
 	assert((intptr_t) dst >= (intptr_t) orgdst);
-	assert((intptr_t) (dst + w + 1) < (intptr_t) (orgdst + oLen));
+	assert((intptr_t) (dst + w + 1) < (intptr_t) (orgdst + dst_length));
 	*dst = dst[w + 1];
       }
     }
