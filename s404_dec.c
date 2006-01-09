@@ -1,6 +1,6 @@
 /*
    StoneCracker S404 algorithm data decompression routine
-   (c) 2006 Jouni 'Mr.Spiv' Korhonen
+   (c) 2006 Jouni 'Mr.Spiv' Korhonen. The code is in public domain.
   
    v0.1
 

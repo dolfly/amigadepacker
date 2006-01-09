@@ -9,7 +9,8 @@ amigadepacker \- Tool for depacking some compressed Amiga formats
 
 .SH DESCRIPTION
 .I amigadepacker
-depacks compressed Amiga formats, which are: PowerPacker, XPK SQSH, and MMCMP.
+depacks compressed Amiga formats, which are: PowerPacker, XPK SQSH, MMCMP
+and StoneCracker 4.04 (S404).
 Amigadepacker will automatically determine the compressed format by content.
 Among other things, the tool is useful for playing packed Amiga music formats
 with
@@ -56,8 +57,10 @@ find /path/ -type f -print0 |xargs -0 amigadepacker -p
 .B amigadepacker
 was written by Heikki Orsila <heikki.orsila@iki.fi>. Decompressor for
 SQSH format was written by Bert Jahn <jah@fh-zwickau.de>, PowerPacker
-depacker and decrypter by Stuart Caie <kyzer@4u.net>, and MMCMP depacker
-by Olivier Lapicque <olivierl@jps.net>. The amigadepacker
+depacker and decrypter by Stuart Caie <kyzer@4u.net>, MMCMP depacker
+by Olivier Lapicque <olivierl@jps.net> and StoneCracker (S404) depacker
+by Jouni "Spiv" Korhonen.
+The amigadepacker
 web page is located at http://www.iki.fi/shd/foss/amigadepacker/
 
 .SH "SEE ALSO"
