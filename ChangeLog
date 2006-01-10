@@ -5,6 +5,7 @@
 2006-01-09  Heikki Orsila <heikki.orsila@iki.fi>
 	- Committed S404 decrunching code by Jouni "Spiv" Korhonen. Not tested
 	  yet.
+	- Fixed decompression through stdin.
 
 2005-12-13  Heikki Orsila <heikki.orsila@iki.fi>
 	- Fixed --help to work.
