@@ -1,3 +1,7 @@
+2006-01-10  Heikki Orsila <heikki.orsila@iki.fi>
+	* Amigadepacker 0.02
+	- StoneCracker aka S404 decompressing support
+
 2006-01-09  Heikki Orsila <heikki.orsila@iki.fi>
 	- Committed S404 decrunching code by Jouni "Spiv" Korhonen. Not tested
 	  yet.
@@ -6,7 +10,7 @@
 	- Fixed --help to work.
 
 2005-12-08  Heikki Orsila <heikki.orsila@iki.fi>
-	* Version 0.01
+	* Amigadepacker 0.01
 	- \o/
 
 2005-12-08  Heikki Orsila <heikki.orsila@iki.fi>
