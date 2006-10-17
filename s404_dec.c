@@ -25,28 +25,28 @@ static uint32_t _bb;
 /* bits left in the bit buffer */
 static int _bl;
 /* bit buffer */
-static uint8_t *_src;
-static uint8_t *_org_src;
+static uint16_t *_bitsrc;
+static uint8_t *_org_bitsrc;
 
 
 static int initGetb(uint8_t *src, uint32_t src_length)
 {
   int eff;
-  _src = src + src_length;
-  _org_src = src;
+  _bitsrc = (uint16_t *) (src + src_length);
+  _org_bitsrc = src;
 
-  _bl = ntohs(* (uint16_t *) (_src));
+  _bl = ntohs(*_bitsrc); /* bit counter */
   if (_bl & (~0xf))
-    fprintf(stderr, "Warning: odd stonecracker data.\n");
+    fprintf(stderr, "Workarounded an ancient stc bug\n");
   /* mask off any corrupt bits */
   _bl &= 0x000f;
-  _src -= 2;    /* bit counter */
+  _bitsrc--;
 
-  _bb = ntohs(* (uint16_t *) (_src));
-  _src -= 2;    /* last short  */
+  _bb = ntohs(*_bitsrc); /* last short */
+  _bitsrc--;
 
-  eff = ntohs(* (uint16_t *) (_src));
-  _src -= 2;    /* efficiency */
+  eff = ntohs(*_bitsrc); /* efficiency */
+  _bitsrc--;
 
   return eff;
 }
@@ -57,19 +57,20 @@ static uint16_t getb(int nbits)
 {
   _bb &= 0x0000ffff;
 
+  /* If not enough bits in the bit buffer, get more */
   if (_bl < nbits) {
     _bb <<= _bl;
+    assert((_bb & 0x0000ffffU) == 0);
 
-    assert((intptr_t) _src >= (intptr_t) _org_src);
-
-    _bb |= (_src[0] << 8);
-    _bb |= _src[1];
-    _src -= 2;
+    assert((intptr_t) _bitsrc >= (intptr_t) _org_bitsrc);
+    _bb |= ntohs(*_bitsrc);
+    _bitsrc--;
 
     nbits -= _bl;
     _bl = 16;
   }
 
+  /* Shift nbits off and return them */
   _bl -= nbits;
   _bb <<= nbits;
   return (_bb >> 16);
