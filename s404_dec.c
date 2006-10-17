@@ -74,10 +74,10 @@ static uint16_t getb(struct bitstream *bs, int nbits)
     bs->src--;
 
     nbits -= bs->left;
-    bs->left = 16;
+    bs->left = 16; /* 16 unused (and some used) bits left in the word */
   }
 
-  /* Shift nbits off and return them */
+  /* Shift nbits off the word and return them */
   bs->left -= nbits;
   bs->word <<= nbits;
   return bs->word >> 16;
@@ -85,7 +85,7 @@ static uint16_t getb(struct bitstream *bs, int nbits)
 
 
 /* Returns bytes still to read.. or < 0 if error. */
-int checkS404File(uint8_t *buf, size_t len,
+int checkS404File(uint32_t *buf, size_t len,
 		  int32_t *oLen, int32_t *pLen, int32_t *sLen )
 {
   if (len < 16)
@@ -94,13 +94,13 @@ int checkS404File(uint8_t *buf, size_t len,
   if (memcmp(buf, "S404", 4) != 0)
     return -1;
 
-  *sLen = ntohl(* (uint32_t *) &buf[4]); /* Security length */
+  *sLen = ntohl(buf[1]); /* Security length */
   if (*sLen < 0)
     return -1;
-  *oLen = ntohl(* (uint32_t *) &buf[8]); /* Depacked length */
+  *oLen = ntohl(buf[2]); /* Depacked length */
   if (*oLen < 0)
     return -1;
-  *pLen = ntohl(* (uint32_t *) &buf[12]); /* Packed length */
+  *pLen = ntohl(buf[3]); /* Packed length */
   if (*pLen < 0)
     return -1;
 
@@ -270,7 +270,7 @@ int decrunch_s404(uint8_t *src, size_t s, FILE *out)
   int32_t oLen, sLen, pLen;
   uint8_t *dst = NULL;
 
-  if (checkS404File(src, s, &oLen, &pLen, &sLen)) {
+  if (checkS404File((uint32_t *) src, s, &oLen, &pLen, &sLen)) {
     fprintf(stderr,"S404 Error: checkS404File() failed..\n");
     goto error;
   }
