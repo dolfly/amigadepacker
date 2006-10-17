@@ -46,7 +46,8 @@ static int initGetb(struct bitstream *bs, uint8_t *src, uint32_t src_length)
   bs->left &= 0x000f;
   bs->src--;
 
-  bs->word = ntohs(*bs->src); /* last short */
+  /* get the first 16-bits of the compressed stream */
+  bs->word = ntohs(*bs->src);
   bs->src--;
 
   eff = ntohs(*bs->src); /* efficiency */
