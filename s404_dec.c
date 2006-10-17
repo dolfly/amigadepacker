@@ -93,7 +93,7 @@ int checkS404File(uint8_t *buf, size_t len,
   if (memcmp(buf, "S404", 4) != 0)
     return -1;
 
-  *sLen = ntohl(* (uint32_t *) &buf[4]);
+  *sLen = ntohl(* (uint32_t *) &buf[4]); /* Security length */
   if (*sLen < 0)
     return -1;
   *oLen = ntohl(* (uint32_t *) &buf[8]); /* Depacked length */
@@ -273,11 +273,6 @@ int decrunch_s404(uint8_t *src, size_t s, FILE *out)
     fprintf(stderr,"S404 Error: checkS404File() failed..\n");
     goto error;
   }
-
-  /* fprintf(stderr, "\tOriginal length: %d\n", oLen);
-     fprintf(stderr, "\tCompressed length: %d\n", pLen);
-     fprintf(stderr, "\tSecurity length: %d\n", sLen);
-  */
 
   if ((dst = malloc(oLen)) == NULL) {
     fprintf(stderr,"S404 Error: malloc(%d) failed..\n", oLen);
