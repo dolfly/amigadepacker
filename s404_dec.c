@@ -2,11 +2,11 @@
    StoneCracker S404 algorithm data decompression routine
    (c) 2006 Jouni 'Mr.Spiv' Korhonen. The code is in public domain.
   
-   v0.1
-
    from shd:
    Some portability notes. We are using int32_t as a file size, and that fits
    all Amiga file sizes. size_t is of course the right choice.
+
+   Warning: Code is not re-entrant.
 */
 
 #include <stdio.h>
@@ -20,53 +20,65 @@
 #include "decrunch.h"
 
 
-static int _bc;
+/* bit buffer for rolling data bit by bit from the compressed file */
 static uint32_t _bb;
+/* bits left in the bit buffer */
+static int _bl;
+/* bit buffer */
+static uint8_t *_src;
 static uint8_t *_org_src;
 
-int initGetb(uint8_t **b)
+
+static int initGetb(uint8_t *src, uint32_t src_length)
 {
   int eff;
-  _bc = ntohs(* (uint16_t *) (*b));
-  *b -= 2;    /* bit counter */
+  _src = src + src_length;
+  _org_src = src;
 
-  _bb = ntohs(* (uint16_t *) (*b));
-  *b -= 2;    /* last short  */
+  _bl = ntohs(* (uint16_t *) (_src));
+  if (_bl & (~0xf))
+    fprintf(stderr, "Warning: odd stonecracker data.\n");
+  /* mask off any corrupt bits */
+  _bl &= 0x000f;
+  _src -= 2;    /* bit counter */
 
-  eff = ntohs(* (uint16_t *) (*b));
-  *b -= 2;    /* efficiency */
+  _bb = ntohs(* (uint16_t *) (_src));
+  _src -= 2;    /* last short  */
 
-  /* check for _bc validity as it may be bugged */
-  _bc &= 0x000f;
+  eff = ntohs(* (uint16_t *) (_src));
+  _src -= 2;    /* efficiency */
 
   return eff;
 }
 
-uint16_t getb(uint8_t **b, int l)
+
+/* get nbits from the compressed stream */
+static uint16_t getb(int nbits)
 {
   _bb &= 0x0000ffff;
 
-  if (_bc < l) {
-    _bb <<= _bc;
+  if (_bl < nbits) {
+    _bb <<= _bl;
 
-    assert((intptr_t) *b >= (intptr_t) _org_src);
+    assert((intptr_t) _src >= (intptr_t) _org_src);
 
-    _bb |= ((*b)[0] << 8);
-    _bb |= (*b)[1];
-    *b -= 2;
+    _bb |= (_src[0] << 8);
+    _bb |= _src[1];
+    _src -= 2;
 
-    l -= _bc;
-    _bc = 16;
+    nbits -= _bl;
+    _bl = 16;
   }
-  _bc -= l;
-  _bb <<= l;
+
+  _bl -= nbits;
+  _bb <<= nbits;
   return (_bb >> 16);
 }
 
-/* Returns bytes still to read.. or < 0 if error. */
 
-size_t checkS404File(uint8_t *buf, size_t len,
-		     int32_t *oLen, int32_t *pLen, int32_t *sLen )
+/* Returns bytes still to read.. or < 0 if error. */
+int checkS404File(uint8_t *buf, size_t len,
+		  int32_t *oLen, int32_t *pLen, int32_t *sLen )
 {
   if (len < 16)
     return -1;
@@ -84,7 +96,7 @@ size_t checkS404File(uint8_t *buf, size_t len,
   if (*pLen < 0)
     return -1;
 
-  return len - 16;
+  return 0;
 }
 
 
@@ -96,20 +108,17 @@ void decompressS404(uint8_t *src, uint8_t *orgdst,
   int32_t n;
   uint8_t *dst;
   int32_t oLen = dst_length;
-  int32_t pLen = src_length;
 
-  _org_src = src;
-
-  src += pLen;
   dst = orgdst + oLen;
-  eff = initGetb(&src);
 
-  /*printf("_bc: %02X, _bb: %04X, eff: %d\n",_bc,_bb,eff);*/
+  eff = initGetb(src, src_length);
+
+  /*printf("_bl: %02X, _bb: %04X, eff: %d\n",_bl,_bb, eff);*/
 
   while (oLen > 0) {
-    w = getb(&src, 9);
+    w = getb(9);
 
-    /*printf("oLen: %d _bc: %02X, _bb: %04X, w: %04X\n",oLen,_bc,_bb,w);*/
+    /*printf("oLen: %d _bl: %02X, _bb: %04X, w: %04X\n",oLen,_bl,_bb,w);*/
 
     if (w < 0x100) {
       assert((intptr_t) dst > (intptr_t) orgdst);
@@ -118,12 +127,12 @@ void decompressS404(uint8_t *src, uint8_t *orgdst,
       oLen--;
     } else if (w == 0x13e || w == 0x13f) {
       w <<= 4;
-      w |= getb(&src, 4);
+      w |= getb(4);
 
       n = (w & 0x1f) + 14;
       oLen -= n;
       while (n-- > 0) {
-        w = getb(&src, 8);
+        w = getb(8);
 
         /*printf("1+001+1111+[4] -> [8] -> %02X\n",w);*/
 	assert((intptr_t) dst > (intptr_t) orgdst);
@@ -136,19 +145,19 @@ void decompressS404(uint8_t *src, uint8_t *orgdst,
         
         if (w & 0x20) {
           /* dist 545 -> */
-          w = (w & 0x1f) << (eff-5);
-          w |= getb(&src, eff-5);
+          w = (w & 0x1f) << (eff - 5);
+          w |= getb(eff - 5);
           w += 544;
-          /* printf("1+1+[1]+1+[%d] -> ",eff); */
+          /* printf("1+1+[1]+1+[%d] -> ", eff); */
         } else if (w & 0x30) {
           // dist 1 -> 32
           w = (w & 0x0f) << 1;
-          w |= getb(&src,1);
-          /* printf("1+1+[1]+01+[5] %d %02X %d %04X-> ",n,w, _bc, _bb); */
+          w |= getb(1);
+          /* printf("1+1+[1]+01+[5] %d %02X %d %04X-> ",n,w, _bl, _bb); */
         } else {
           /* dist 33 -> 544 */
           w = (w & 0x0f) << 5;
-          w |= getb(&src, 5);
+          w |= getb(5);
           w += 32;
           /* printf("1+1+[1]+00+[9] -> "); */
         }
@@ -158,19 +167,19 @@ void decompressS404(uint8_t *src, uint8_t *orgdst,
         
         if (w & 0x08) {
           /* dist 545 -> */
-          w = (w & 0x07) << (eff-3);
-          w |= getb(&src,eff-3);
+          w = (w & 0x07) << (eff - 3);
+          w |= getb(eff - 3);
           w += 544;
-          /* printf("1+01+[2]+1+[%d] -> ",eff); */
+          /* printf("1+01+[2]+1+[%d] -> ", eff); */
         } else if (w & 0x0c) {
           /* dist 1 -> 32 */
           w = (w & 0x03) << 3;
-          w |= getb(&src,3);
+          w |= getb(3);
           /* printf("1+01+[2]+01+[5] -> "); */
         } else {
           /* dist 33 -> 544 */
           w = (w & 0x03) << 7;
-          w |= getb(&src,7);
+          w |= getb(7);
           w += 32;
           /* printf("1+01+[2]+00+[9] -> "); */
         }
@@ -180,11 +189,11 @@ void decompressS404(uint8_t *src, uint8_t *orgdst,
         
         if (w & 0x01) {
           /* dist 545 -> */
-          w = getb(&src,eff);
+          w = getb(eff);
           w += 544;
-          /* printf("1+001+[4]+1+[%d] -> ",eff); */
+          /* printf("1+001+[4]+1+[%d] -> ", eff); */
         } else {
-          w = getb(&src,6);
+          w = getb(6);
 
           if (w & 0x20) {
             /* dist 1 -> 32 */
@@ -193,7 +202,7 @@ void decompressS404(uint8_t *src, uint8_t *orgdst,
           } else {
             /* dist 33 -> 544 */
             w <<= 4;
-            w |= getb(&src,4);
+            w |= getb(4);
 
             w += 32;
             /* printf("1+001+[4]+00+[9] -> "); */
@@ -201,21 +210,21 @@ void decompressS404(uint8_t *src, uint8_t *orgdst,
         }
       } else {
         w = (w & 0x1f) << 3;
-	w |= getb(&src,3);
+	w |= getb(3);
         n = 23;
 
         while (w == 0xff) {
           n += w;
-          w = getb(&src,8);
+          w = getb(8);
         }
         n += w;
 
-        w = getb(&src,7);
+        w = getb(7);
 
         if (w & 0x40) {
           /* dist 545 -> */
           w = (w & 0x3f) << (eff - 6);
-          w |= getb(&src,eff - 6);
+          w |= getb(eff - 6);
 
           w += 544;
         } else if (w & 0x20) {
@@ -225,7 +234,7 @@ void decompressS404(uint8_t *src, uint8_t *orgdst,
         } else {
           /* dist 33 -> 544; */
           w <<= 4;
-	  w |= getb(&src,4);
+	  w |= getb(4);
 
           w += 32;
           /* printf("1+000+[8]+00+[9] -> "); */
@@ -251,9 +260,8 @@ int decrunch_s404(uint8_t *src, size_t s, FILE *out)
 {
   int32_t oLen, sLen, pLen;
   uint8_t *dst = NULL;
-  size_t n;
 
-  if ((n = checkS404File(src, s, &oLen, &pLen, &sLen)) == -1) {
+  if (checkS404File(src, s, &oLen, &pLen, &sLen)) {
     fprintf(stderr,"S404 Error: checkS404File() failed..\n");
     goto error;
   }
