@@ -20,7 +20,7 @@ int main(int argc, char **argv)
 	{NULL, 0, NULL, 0}
     };
 
-    while ((ret = getopt_long(argc, argv, "chpv", long_options, 0)) != -1) {
+    while ((ret = getopt_long(argc, argv, "chpv", long_options, NULL)) != -1) {
 	switch (ret) {
 	case 'c':
 	    use_stdout = 1;

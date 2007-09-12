@@ -26,10 +26,19 @@ if test ! -z "$packageprefix" ; then
     prefix="$packageprefix/$prefix"
 fi
 
-sed -e "s|{PREFIX}|$prefix|g" -e "s|{VERSION}|$version|" < Makefile.in > Makefile
+if test -z "$CC" ; then
+    CC=gcc
+fi
+
+sed -e "s|{PREFIX}|$prefix|g" \
+    -e "s|{VERSION}|$version|g" \
+    -e "s|{CC}|$CC|g" \
+    < Makefile.in > Makefile
 
 echo "#define VERSION \"$version\"" > version.h
 
-echo "Would install amigadepacker binary to directory $prefix/bin."
-echo ""
-echo "Configure succesful."
+echo
+echo "Install path:    $prefix/bin"
+echo "Compiler:        $CC"
+echo
+echo "Configure successful"

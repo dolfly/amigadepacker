@@ -85,8 +85,8 @@ static uint16_t getb(struct bitstream *bs, int nbits)
 
 
 /* Returns bytes still to read.. or < 0 if error. */
-int checkS404File(uint32_t *buf, size_t len,
-		  int32_t *oLen, int32_t *pLen, int32_t *sLen )
+static int checkS404File(uint32_t *buf, size_t len,
+			 int32_t *oLen, int32_t *pLen, int32_t *sLen )
 {
   if (len < 16)
     return -1;
@@ -108,8 +108,8 @@ int checkS404File(uint32_t *buf, size_t len,
 }
 
 
-void decompressS404(uint8_t *src, uint8_t *orgdst,
-		    int32_t dst_length, int32_t src_length)
+static void decompressS404(uint8_t *src, uint8_t *orgdst,
+			   int32_t dst_length, int32_t src_length)
 {
   uint16_t w;
   int32_t eff;

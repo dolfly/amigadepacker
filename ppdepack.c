@@ -35,7 +35,7 @@
 
 #define WANT_PP2X_DECRYPTING
 
-int savefile(FILE *fo, void *mem, size_t length)
+static int savefile(FILE *fo, void *mem, size_t length)
 {
   int ok = fo && (fwrite(mem, 1, length, fo) == length);
   return ok;
@@ -85,8 +85,8 @@ inline void ppDecryptCopy(UBYTE *src, UBYTE *dest, ULONG len, ULONG key)
   written++;                                                   \
 } while (0)
 
-int ppDecrunch(UBYTE *src, UBYTE *dest, UBYTE *offset_lens,
-               ULONG src_len, ULONG dest_len, UBYTE skip_bits)
+static int ppDecrunch(UBYTE *src, UBYTE *dest, UBYTE *offset_lens,
+		      ULONG src_len, ULONG dest_len, UBYTE skip_bits)
 {
   UBYTE *buf_src, *out, *dest_end, bits_left = 0, bit_cnt;
   ULONG bit_buffer = 0, x, todo, offbits, offset, written=0;
@@ -189,7 +189,8 @@ inline int ppValidate(UBYTE *src, UBYTE *offset_lens,
 }                     
 #endif
 
-int ppcrack(FILE *fo, UBYTE *data, ULONG len) {
+static int ppcrack(FILE *fo, UBYTE *data, ULONG len)
+{
   /* PP FORMAT:
    *      1 longword identifier           'PP20' or 'PX20'
    *     [1 word checksum (if 'PX20')     $ssss]
@@ -313,7 +314,7 @@ int ppcrack(FILE *fo, UBYTE *data, ULONG len) {
 #endif
     }
   free((void *) output);
-return success;
+  return success;
 }
 
 

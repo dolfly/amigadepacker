@@ -72,8 +72,7 @@ typedef struct MMCMPBITBUFFER
 } MMCMPBITBUFFER;
 
 
-uint32_t GetBits(struct MMCMPBITBUFFER *bb, uint32_t nBits)
-/*--------------------------------------- */
+static uint32_t GetBits(struct MMCMPBITBUFFER *bb, uint32_t nBits)
 {
 	uint32_t d;
 	if (!nBits) return 0;
@@ -94,23 +93,23 @@ uint32_t GetBits(struct MMCMPBITBUFFER *bb, uint32_t nBits)
 extern void Log(LPCSTR s, uint32_t d1=0, uint32_t d2=0, uint32_t d3=0);
 #endif
 
-const uint32_t MMCMP8BitCommands[8] =
+static const uint32_t MMCMP8BitCommands[8] =
 {
 	0x01, 0x03,	0x07, 0x0F,	0x1E, 0x3C,	0x78, 0xF8
 };
 
-const uint32_t MMCMP8BitFetch[8] =
+static const uint32_t MMCMP8BitFetch[8] =
 {
 	3, 3, 3, 3, 2, 1, 0, 0
 };
 
-const uint32_t MMCMP16BitCommands[16] =
+static const uint32_t MMCMP16BitCommands[16] =
 {
 	0x01, 0x03,	0x07, 0x0F,	0x1E, 0x3C,	0x78, 0xF0,
 	0x1F0, 0x3F0, 0x7F0, 0xFF0, 0x1FF0, 0x3FF0, 0x7FF0, 0xFFF0
 };
 
-const uint32_t MMCMP16BitFetch[16] =
+static const uint32_t MMCMP16BitFetch[16] =
 {
 	4, 4, 4, 4, 3, 2, 1, 0,
 	0, 0, 0, 0, 0, 0, 0, 0
