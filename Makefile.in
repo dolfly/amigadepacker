@@ -19,10 +19,10 @@ ppdepack.o:	ppdepack.c ppdepack.h decrunch.h
 mmcmp.o:	mmcmp.c mmcmp.h decrunch.h
 	$(CC) $(CFLAGS) -c $<
 
-s404_dec.o:	s404_dec.c s404_dec.h decrunch.h
+s404_dec.o:	s404_dec.c s404_dec.h decrunch.h compat.h
 	$(CC) $(CFLAGS) -c $<
 
-unsqsh.o:	unsqsh.c unsqsh.h decrunch.h
+unsqsh.o:	unsqsh.c unsqsh.h decrunch.h compat.h
 	$(CC) $(CFLAGS) -c $<
 
 install:	amigadepacker

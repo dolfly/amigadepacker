@@ -19,6 +19,7 @@
 
 #include "unsqsh.h"
 #include "decrunch.h"
+#include "compat.h"
 
 
 #define XPKERR_CHKSUM 1
@@ -42,12 +43,12 @@ int decrunch_sqsh (uint8_t *src, size_t s, FILE *out)
   if (memcmp(src, "XPKF", 4) != 0)
     return -1;
 
-  srclen = ntohl(* (uint32_t *) &src[4]);
+  srclen = read_be_s32(&src[4]);
 
   if (memcmp(&src[8], "SQSH", 4) != 0)
     return -1;
 
-  dstlen = ntohl(* (uint32_t *) &src[12]);
+  dstlen = read_be_s32(&src[12]);
 
   newsrc = (unsigned char *) malloc(srclen + 3);
   dst = (unsigned char*) malloc(dstlen + 100);

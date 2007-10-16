@@ -12,9 +12,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdint.h>
-#include <netinet/in.h>
 #include <assert.h>
+
+#include "compat.h"
 
 #include "s404_dec.h"
 
@@ -39,7 +39,7 @@ static int initGetb(struct bitstream *bs, uint8_t *src, uint32_t src_length)
   bs->src = (uint16_t *) (src + src_length);
   bs->orgsrc = src;
 
-  bs->left = ntohs(*bs->src); /* bit counter */
+  bs->left = read_be_u16(bs->src); /* bit counter */
   if (bs->left & (~0xf))
     fprintf(stderr, "Workarounded an ancient stc bug\n");
   /* mask off any corrupt bits */
@@ -47,10 +47,10 @@ static int initGetb(struct bitstream *bs, uint8_t *src, uint32_t src_length)
   bs->src--;
 
   /* get the first 16-bits of the compressed stream */
-  bs->word = ntohs(*bs->src);
+  bs->word = read_be_u16(bs->src);
   bs->src--;
 
-  eff = ntohs(*bs->src); /* efficiency */
+  eff = read_be_u16(bs->src); /* efficiency */
   bs->src--;
 
   return eff;
@@ -70,7 +70,7 @@ static uint16_t getb(struct bitstream *bs, int nbits)
     /* Check that we don't go out of bounds */
     assert((intptr_t) bs->src >= (intptr_t) bs->orgsrc);
 
-    bs->word |= ntohs(*bs->src);
+    bs->word |= read_be_u16(bs->src);
     bs->src--;
 
     nbits -= bs->left;
@@ -94,13 +94,13 @@ static int checkS404File(uint32_t *buf, size_t len,
   if (memcmp(buf, "S404", 4) != 0)
     return -1;
 
-  *sLen = ntohl(buf[1]); /* Security length */
+  *sLen = read_be_u32(&buf[1]); /* Security length */
   if (*sLen < 0)
     return -1;
-  *oLen = ntohl(buf[2]); /* Depacked length */
+  *oLen = read_be_u32(&buf[2]); /* Depacked length */
   if (*oLen < 0)
     return -1;
-  *pLen = ntohl(buf[3]); /* Packed length */
+  *pLen = read_be_u32(&buf[3]); /* Packed length */
   if (*pLen < 0)
     return -1;
 
