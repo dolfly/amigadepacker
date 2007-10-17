@@ -244,11 +244,10 @@ int decrunch(const char *filename, FILE *out, int pretend)
 	exit(1);
     }
 
-    free(buf);
-    buf = NULL;
-
     if (res < 0)
       goto error;
+
+    free(buf);
 
     fclose(in);
     fclose(out);
@@ -267,11 +266,15 @@ int decrunch(const char *filename, FILE *out, int pretend)
  error:
     if (in)
 	fclose(in);
-    if (out != stdout && out != NULL)
+
+    if (out != NULL)
       fclose(out);
+
     if (dstname[0])
 	unlink(dstname);
+
     if (buf)
 	free(buf);
+
     return -1;
 }
