@@ -1,7 +1,7 @@
 CC= {CC}
 CFLAGS= -Wall -O2 -g
 LDFLAGS=
-MODULES= main.o decrunch.o ppdepack.o mmcmp.o s404_dec.o unsqsh.o
+MODULES= main.o decrunch.o ppdepack.o mmcmp.o s404_dec.o unsqsh.o compat.o
 RELDIR=amigadepacker-{VERSION}
 
 amigadepacker:	$(MODULES)
@@ -10,7 +10,10 @@ amigadepacker:	$(MODULES)
 main.o:	main.c decrunch.h version.h
 	$(CC) $(CFLAGS) -c $<
 
-decrunch.o:	decrunch.c decrunch.h ppdepack.h
+compat.o:	compat.c compat.h
+	$(CC) $(CFLAGS) -c $<
+
+decrunch.o:	decrunch.c decrunch.h ppdepack.h compat.h config.h
 	$(CC) $(CFLAGS) -c $<
 
 ppdepack.o:	ppdepack.c ppdepack.h decrunch.h

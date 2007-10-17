@@ -37,8 +37,23 @@ sed -e "s|{PREFIX}|$prefix|g" \
 
 echo "#define VERSION \"$version\"" > version.h
 
+echo "" > config.h
+
+mkstemp="yes"
+cat > mkstemptest.c <<EOF
+#include <stdlib.h>
+int main(void) {char foo[] = "aXXXXXX"; return mkstemp(foo);}
+EOF
+$CC -o mkstemptest mkstemptest.c 2>/dev/null
+if test "$?" != "0"; then
+    echo "#define NO_MKSTEMP" >> config.h
+    mkstemp="no"
+fi
+rm -f mkstemptest
+
 echo
 echo "Install path:    $prefix/bin"
 echo "Compiler:        $CC"
+echo "mkstemp():       $mkstemp"
 echo
 echo "Configure successful"

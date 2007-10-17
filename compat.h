@@ -2,6 +2,7 @@
 #define _AMIGADEPACKER_COMPAT_H_
 
 #include <stdint.h>
+#include "config.h"
 
 static uint16_t read_be_u16(void *s)
 {
@@ -24,5 +25,9 @@ static inline int32_t read_be_s32(void *s)
 {
     return (int32_t) read_be_u32(s);
 }
+
+#ifdef NO_MKSTEMP
+int mkstemp(char *template);
+#endif
 
 #endif

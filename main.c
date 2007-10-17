@@ -65,7 +65,7 @@ int main(int argc, char **argv)
 	return -1;
     }
 
-    if ((use_stdout) && optind == argc) {
+    if (use_stdout && optind == argc) {
 	res = decrunch("", stdout, pretend);
     } else {
 	res = 0;
