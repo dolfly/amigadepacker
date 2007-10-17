@@ -30,12 +30,16 @@ fi
 
 name="Test 4"
 file="aon.wingsofdeath1.stc"
-md5="`$prog -c < $file |md5sum |cut -d ' ' -f1`"
+outfile="stc.tmp"
+cp "$file" "$outfile"
+$prog "$outfile"
+md5="$(md5sum "$outfile" |cut -d ' ' -f1)"
 if test "$md5" != "ab45d5c5427617d6ee6e4260710edaf1" ; then
     echo $name error
     res="-1"
 fi
 
+name="Test 5"
 if test "$1" = "--enc" ; then
     name="Test 1 encrypted"
     file="pp20_enc_1"
