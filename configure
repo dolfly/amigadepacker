@@ -39,6 +39,11 @@ echo "#define VERSION \"$version\"" > version.h
 
 echo "" > config.h
 
+echo "$(uname)" |grep -i MINGW > /dev/null 2>/dev/null
+if test "$?" = "0" ; then
+    echo "#define RENAME_WORKAROUND" >> config.h
+fi
+
 mkstemp="yes"
 cat > mkstemptest.c <<EOF
 #include <stdlib.h>

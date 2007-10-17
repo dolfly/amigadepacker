@@ -34,6 +34,7 @@
 #include "unsqsh.h"
 #include "mmcmp.h"
 #include "s404_dec.h"
+#include "config.h"
 
 
 enum {
@@ -254,6 +255,11 @@ int decrunch(const char *filename, FILE *out, int pretend)
 
     if (output_to_file) {
 	assert(dstname[0] != 0);
+
+#ifdef RENAME_WORKAROUND
+	/* Don't check return value of unlink() */
+	unlink(filename);
+#endif
 
 	if (rename(dstname, filename)) {
 	    fprintf(stderr, "Rename error: %s -> %s (%s)\n", dstname, filename, strerror(errno));

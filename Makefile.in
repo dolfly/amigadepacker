@@ -10,7 +10,7 @@ amigadepacker:	$(MODULES)
 main.o:	main.c decrunch.h version.h
 	$(CC) $(CFLAGS) -c $<
 
-compat.o:	compat.c compat.h
+compat.o:	compat.c compat.h config.h
 	$(CC) $(CFLAGS) -c $<
 
 decrunch.o:	decrunch.c decrunch.h ppdepack.h compat.h config.h
