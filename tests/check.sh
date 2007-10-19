@@ -4,44 +4,55 @@ echo "Executing a test set."
 
 res="0"
 
-name="Test 1"
-file="sqsh1"
-md5="`$prog -c < $file |md5sum |cut -d ' ' -f1`"
-if test "$md5" != "b3659301b360a83bd737ef80201ddcaf" ; then
-    echo $name error
+function depack() {
+    name="$1"
+    infile="$2"
+    md5="$3"
+    outfile="$4"
+    if test "$outfile" = "inplace" ; then
+	outfile="$infile"
+	$prog "$infile"
+    elif test "$outfile" = "stdout" ; then
+	outfile="depack.tmp"
+	$prog -c "$infile" > "$outfile"
+    else
+	$prog -o "$outfile" "$infile"
+    fi
+    result="$(md5sum "$outfile" |cut -d ' ' -f1)"
+    if test "$result" = "$md5" ; then
+	res="0"
+    else
+	echo $name error
+	res="1"
+    fi
+
+    return $res
+}
+
+depack "Test 1" "sqsh1" "b3659301b360a83bd737ef80201ddcaf" stdout
+newres="$?"
+if test "$newres" != "0" ; then
     res="1"
 fi
 
-name="Test 2"
-file="pp20_1"
-md5="`$prog -c < $file |md5sum |cut -d ' ' -f1`"
-if test "$md5" != "274e539d6226cc79719841c9671752d2" ; then
-    echo $name error
+depack "Test 2" "pp20_1" "274e539d6226cc79719841c9671752d2" depack.tmp
+newres="$?"
+if test "$newres" != "0" ; then
     res="1"
 fi
 
-name="Test 3"
-file="sqsh_random1"
-outfile="sqsh.tmp"
-$prog -o "$outfile" $file
-md5="$(md5sum "$outfile" |cut -d ' ' -f1)"
-if test "$md5" != "5f7c2705f9257eb65e38edbc08028375" ; then
-    echo $name error
+cp "sqsh_random1" "depack.tmp"
+depack "Test 3" "depack.tmp" "5f7c2705f9257eb65e38edbc08028375" inplace
+newres="$?"
+if test "$newres" != "0" ; then
     res="1"
 fi
-rm -f "$outfile"
 
-name="Test 4"
-file="aon.wingsofdeath1.stc"
-outfile="stc.tmp"
-cp "$file" "$outfile"
-$prog "$outfile"
-md5="$(md5sum "$outfile" |cut -d ' ' -f1)"
-if test "$md5" != "ab45d5c5427617d6ee6e4260710edaf1" ; then
-    echo $name error
+depack "Test 4" "aon.wingsofdeath1.stc" "ab45d5c5427617d6ee6e4260710edaf1" stdout
+newres="$?"
+if test "$newres" != "0" ; then
     res="1"
 fi
-rm -f "$outfile"
 
 name="Test 5"
 if test "$1" = "--enc" ; then
