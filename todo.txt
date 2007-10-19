@@ -1,2 +1,3 @@
 List of things to be done:
- * Fix sqsh decruncing on MinGW: for some reason binary file modes do not work
+ * Fix sqsh decruncing on MinGW: for some reason binary file modes do not work.
+   "amigadepacker -o outfile infile" seems to be the only way that works..
