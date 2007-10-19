@@ -318,10 +318,16 @@ static int ppcrack(FILE *fo, UBYTE *data, ULONG len)
 }
 
 
-int decrunch_pp (uint8_t *src, size_t s, FILE *fo)
+static int decrunch_pp (uint8_t *src, size_t s, FILE *fo)
 {
   int success;
   key_start = 0;
   success = ppcrack(fo, (UBYTE *) src, s);
   return success;
 }
+
+
+struct decruncher decruncher_pp = {
+    .name = "PowerPacker data",
+    .decrunch = decrunch_pp
+};

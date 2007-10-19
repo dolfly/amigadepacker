@@ -265,7 +265,7 @@ static void decompressS404(uint8_t *src, uint8_t *orgdst,
 }
 
 
-int decrunch_s404(uint8_t *src, size_t s, FILE *out)
+static int decrunch_s404(uint8_t *src, size_t s, FILE *out)
 {
   int32_t oLen, sLen, pLen;
   uint8_t *dst = NULL;
@@ -295,3 +295,9 @@ int decrunch_s404(uint8_t *src, size_t s, FILE *out)
   free(dst);
   return -1;
 }
+
+
+struct decruncher decruncher_s404 = {
+    .name = "StoneCracker S404",
+    .decrunch = decrunch_s404
+};

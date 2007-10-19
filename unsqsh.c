@@ -30,7 +30,7 @@ typedef uint32_t ULONG;
 static int unpack(byte *src, byte *dst, int len);
 
 
-int decrunch_sqsh (uint8_t *src, size_t s, FILE *out)
+static int decrunch_sqsh (uint8_t *src, size_t s, FILE *out)
 {
   unsigned char *newsrc = NULL;
   unsigned char *dst = NULL;
@@ -70,6 +70,13 @@ int decrunch_sqsh (uint8_t *src, size_t s, FILE *out)
   free(dst);
   return -1;
 }
+
+
+struct decruncher decruncher_sqsh = {
+    .name = "XPK SQSH",
+    .decrunch = decrunch_sqsh
+};
+
 
 static UWORD xchecksum(ULONG* ptr, ULONG count)
 {

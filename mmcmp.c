@@ -302,7 +302,7 @@ static int mmcmp_unpack(uint8_t **ppMemFile, uint32_t *pdwMemLength)
 }
 
 
-int decrunch_mmcmp (uint8_t *src, size_t newsize, FILE *out)
+static int decrunch_mmcmp (uint8_t *src, size_t newsize, FILE *out)
 {
   uint32_t size = newsize;
 
@@ -313,3 +313,9 @@ int decrunch_mmcmp (uint8_t *src, size_t newsize, FILE *out)
 
   return 0;
 }
+
+
+struct decruncher decruncher_mmcmp = {
+    .name = "MMCMP",
+    .decrunch = decrunch_mmcmp
+};

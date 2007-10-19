@@ -1,9 +1,8 @@
 #ifndef _MMCMP_H_
 #define _MMCMP_H_
 
-#include <stdio.h>
-#include <stdint.h>
+#include "decrunch.h"
 
-int decrunch_mmcmp(uint8_t *src, size_t s, FILE *out);
+extern struct decruncher decruncher_mmcmp;
 
 #endif

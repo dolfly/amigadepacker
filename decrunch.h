@@ -14,6 +14,12 @@
 #define _DECRUNCH_H_
 
 #include <stdio.h>
+#include <stdint.h>
+
+struct decruncher {
+    char *name;
+    int (*decrunch)(uint8_t *, size_t, FILE *);
+};
 
 size_t atomic_fread(void *dst, FILE *f, size_t count);
 size_t atomic_fwrite(FILE *f, void *src, size_t count);

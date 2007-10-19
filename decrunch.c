@@ -37,14 +37,6 @@
 #include "config.h"
 
 
-enum {
-    BUILTIN_PP = 1,
-    BUILTIN_SQSH,
-    BUILTIN_MMCMP,
-    BUILTIN_S404
-};
-
-
 size_t atomic_fread(void *dst, FILE *f, size_t count)
 {
     uint8_t *p = (uint8_t *) dst;
@@ -140,48 +132,45 @@ static int read_packed_data_to_memory(uint8_t **buf, size_t *nbytes,
 }
 
 
-static char *check_header(int *builtin, uint8_t b[16])
+static struct decruncher *check_header(uint8_t b[16])
 {
-    char *packer = NULL;
+    struct decruncher *decruncher = NULL;
 
     if ((b[0] == 'P' && b[1] == 'X' && b[2] == '2' && b[3] == '0') ||
 	(b[0] == 'P' && b[1] == 'P' && b[2] == '2' && b[3] == '0')) {
-        packer = "PowerPacker data";
-	*builtin = BUILTIN_PP;
+	decruncher = &decruncher_pp;
 
     } else if (b[0] == 'X' && b[1] == 'P' && b[2] == 'K' && b[3] == 'F' &&
 	       b[8] == 'S' && b[9] == 'Q' && b[10] == 'S' && b[11] == 'H') {
-	packer = "XPK SQSH";
-	*builtin = BUILTIN_SQSH;
+	decruncher = &decruncher_sqsh;
 
     } else if (b[0] == 'z' && b[1] == 'i' && b[2] == 'R' && b[3] == 'C' &&
 	       b[4] == 'O' && b[5] == 'N' && b[6] == 'i' && b[7] == 'a') {
-	packer = "MMCMP";
-	*builtin = BUILTIN_MMCMP;
+	decruncher = &decruncher_mmcmp;
 
     } else if (b[0] == 'S' && b[1] == '4' && b[2] == '0' && b[3] == '4' &&
 	       b[4] < 0x80 && b[8] < 0x80 && b[12] < 0x80) {
-	packer ="S404";
-	*builtin = BUILTIN_S404;
+	decruncher = &decruncher_s404;
     }
 
-    return packer;
+    return decruncher;
 }
 
 
 int decrunch(const char *filename, FILE *out, int pretend)
 {
     uint8_t b[16];
-    int builtin, res;
+    int res;
     size_t nbytes;
     FILE *in;
     char dstname[PATH_MAX] = "";
     uint8_t *buf = NULL;
-    char *packer;
+    struct decruncher *decruncher;
     int output_to_file = (out != stdout);
 
     if (filename[0]) {
-	if ((in = fopen(filename, "rb")) == NULL) {
+	in = fopen(filename, "rb");
+	if (in == NULL) {
 	    fprintf(stderr, "Unknown file %s\n", filename);
 	    goto error;
 	}
@@ -193,14 +182,14 @@ int decrunch(const char *filename, FILE *out, int pretend)
     if (nbytes < sizeof b)
 	goto error;
 
-    packer = check_header(&builtin, b);
-    if (!packer)
+    decruncher = check_header(b);
+    if (decruncher == NULL)
 	goto error;
 
     if (filename[0])
-	fprintf(stderr, "File %s is in %s format.\n", filename, packer);
+	fprintf(stderr, "File %s is in %s format.\n", filename, decruncher->name);
     else
-	fprintf(stderr, "Stream is in %s format.\n", packer);
+	fprintf(stderr, "Stream is in %s format.\n", decruncher->name);
 
     if (pretend)
       return 0;
@@ -216,34 +205,20 @@ int decrunch(const char *filename, FILE *out, int pretend)
 
 	snprintf(dstname, sizeof dstname, "%s.XXXXXX", filename);
 
-	if ((fd = mkstemp(dstname)) < 0) {
+	fd = mkstemp(dstname);
+	if (fd < 0) {
 	    fprintf(stderr, "Could not create a temporary file: %s (%s)\n", dstname, strerror(errno));
 	    goto error;
 	}
 
-	if ((out = fdopen(fd, "w")) == NULL) {
+	out = fdopen(fd, "wb");
+	if (out == NULL) {
 	    fprintf(stderr, "Could not fdopen temporary file: %s\n", dstname);
 	    goto error;
 	}
     }
 
-    switch (builtin) {
-    case BUILTIN_PP:    
-	res = decrunch_pp (buf, nbytes, out);
-	break;
-    case BUILTIN_SQSH:    
-	res = decrunch_sqsh (buf, nbytes, out);
-	break;
-    case BUILTIN_MMCMP:    
-	res = decrunch_mmcmp (buf, nbytes, out);
-	break;
-    case BUILTIN_S404:
-	res = decrunch_s404(buf, nbytes, out);
-	break;
-    default:
-	fprintf(stderr, "Unknown packer integer: %d\n", builtin);
-	exit(1);
-    }
+    res = decruncher->decrunch(buf, nbytes, out);
 
     if (res < 0)
       goto error;
