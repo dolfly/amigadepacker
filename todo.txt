@@ -1,1 +1,2 @@
-* Add -o outfile option
+List of things to be done:
+ * Fix sqsh decruncing on MinGW: for some reason binary file modes do not work
