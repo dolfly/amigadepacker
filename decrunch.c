@@ -34,7 +34,7 @@
 #include "unsqsh.h"
 #include "mmcmp.h"
 #include "s404_dec.h"
-#include "config.h"
+#include "compat.h"
 
 
 size_t atomic_fread(void *dst, FILE *f, size_t count)
