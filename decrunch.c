@@ -166,7 +166,7 @@ int decrunch(const char *filename, FILE *out, int pretend)
     char dstname[PATH_MAX] = "";
     uint8_t *buf = NULL;
     struct decruncher *decruncher;
-    int output_to_file = (out != stdout);
+    int output_to_same_file = (out == NULL);
 
     if (filename[0]) {
 	in = fopen(filename, "rb");
@@ -200,7 +200,7 @@ int decrunch(const char *filename, FILE *out, int pretend)
     if (nbytes <= sizeof b)
       goto error;
 
-    if (output_to_file) {
+    if (output_to_same_file) {
 	int fd;
 
 	snprintf(dstname, sizeof dstname, "%s.XXXXXX", filename);
@@ -228,7 +228,7 @@ int decrunch(const char *filename, FILE *out, int pretend)
     fclose(in);
     fclose(out);
 
-    if (output_to_file) {
+    if (output_to_same_file) {
 	assert(dstname[0] != 0);
 
 #ifdef RENAME_WORKAROUND

@@ -5,7 +5,7 @@ amigadepacker \- Tool for depacking some compressed Amiga formats
 
 .SH SYNTAX
 .B amigadepacker
-[\fB-c\fR] [\fB-h\fR] [\fB-p\fR] [\fB-v\fR] FILE ...
+[\fB-c\fR] [\fB-h\fR] [\fB-o outfile\fR] [\fB-p\fR] [\fB-v\fR] FILE ...
 
 .SH DESCRIPTION
 .I amigadepacker
@@ -16,6 +16,8 @@ Among other things, the tool is useful for playing packed Amiga music formats
 with
 .B uade
 (1).
+
+By default the amigadepacker overwrites the packed with the depacked result.
 
 The tool can also be used to decrypt powerpacker encrypted files. That
 operation will only take a few hours.
@@ -28,6 +30,10 @@ Unpack to stdout.
 .TP
 .B \-h
 Display help
+.TP
+.B \-o outfile, \-\-output\-file outfile
+Write decrunched data into outfile instead of overwriting the packed
+file.
 .TP
 .B \-p
 Pretend to unpack, but do not. Prints names of packed files to stderr. Pretend
@@ -51,7 +57,7 @@ cat foo |amigadepacker -c > foo.depacked
 .ft R
 Find all packed files under /path:
 .ft B
-find /path/ -type f -print0 |xargs -0 amigadepacker -p
+find /path/ -type f -print0 |xargs -0 amigadepacker -p --
 
 .SH AUTHOR
 .B amigadepacker
