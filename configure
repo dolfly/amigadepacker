@@ -42,6 +42,18 @@ echo "" > config.h
 echo "$(uname)" |grep -i MINGW > /dev/null 2>/dev/null
 if test "$?" = "0" ; then
     echo "#define RENAME_WORKAROUND" >> config.h
+
+    echo
+    echo
+    echo
+    echo "MinGW warning: amigadepacker -o outfile infile is the only method that works."
+    echo "Using amigapacker -c or amigadepacker infile will yield corrupt files."
+    echo
+    echo "Sleeping 5 seconds..."
+    echo
+    echo
+    echo
+    sleep 5
 fi
 
 mkstemp="yes"
