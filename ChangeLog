@@ -1,3 +1,10 @@
+2007-10-19  Heikki Orsila <heikki.orsila@iki.fi>
+	* Amigadepacker 0.03
+	- Partial MinGW support, but still broken for anything but
+	  "amigadepacker -o outfile infile"
+	- Code cleanups and commenting
+	- Improved man page
+
 2006-10-18  Heikki Orsila <heikki.orsila@iki.fi>
 	- Made stc decruncher routine re-entrant
 
@@ -8,7 +15,7 @@
 2006-01-09  Heikki Orsila <heikki.orsila@iki.fi>
 	- Committed S404 decrunching code by Jouni "Spiv" Korhonen. Not tested
 	  yet.
-	- Fixed decompression through stdin.
+	- Fixed decompression through stdin
 
 2005-12-13  Heikki Orsila <heikki.orsila@iki.fi>
 	- Fixed --help to work.
