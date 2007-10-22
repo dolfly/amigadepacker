@@ -24,6 +24,6 @@ struct decruncher {
 size_t atomic_fread(void *dst, FILE *f, size_t count);
 size_t atomic_fwrite(FILE *f, void *src, size_t count);
 
-int decrunch (const char *filename, FILE *out, int pretend);
+int decrunch (FILE *out, const char *filename, int pretend);
 
 #endif

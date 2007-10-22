@@ -1,4 +1,4 @@
-.TH amigadepacker 1 "2005-12-07" Linux "user commands"
+.TH amigadepacker 1 "2007-10-22" Linux "user commands"
 
 .SH NAME
 amigadepacker \- Tool for depacking some compressed Amiga formats
@@ -9,31 +9,34 @@ amigadepacker \- Tool for depacking some compressed Amiga formats
 
 .SH DESCRIPTION
 .I amigadepacker
-depacks compressed Amiga formats, which are: PowerPacker, XPK SQSH, MMCMP
-and StoneCracker 4.04 (S404).
+depacks compressed Amiga formats. PowerPacker, XPK SQSH, MMCMP
+and StoneCracker 4.04 (S404) formats are supported.
 Amigadepacker will automatically determine the compressed format by content.
 Among other things, the tool is useful for playing packed Amiga music formats
 with
 .B uade
 (1).
 
-By default the amigadepacker overwrites the packed with the depacked result.
+If no files are given for the amigadepacker, the data is read from stdin.
+If some files are given, it tries to unpack them inplace,
+i.e. overwriting the given files with unpacked data. If a single file
+and "-c" is given, unpacked data is written to stdout. If a single file
+and "-o outfile" is given, unpacked data is written to file named "out".
 
 The tool can also be used to decrypt powerpacker encrypted files. That
-operation will only take a few hours.
-
+operation will take a few hours.
 
 .SH OPTIONS
 .TP
 .B \-c
-Unpack to stdout.
+Unpack to stdout (when regular files have been given as parameters)
 .TP
 .B \-h
 Display help
 .TP
 .B \-o outfile, \-\-output\-file outfile
 Write decrunched data into outfile instead of overwriting the packed
-file.
+file
 .TP
 .B \-p
 Pretend to unpack, but do not. Prints names of packed files to stderr. Pretend
@@ -52,12 +55,18 @@ amigadepacker foo
 .ft R
 Unpack a file from stdin to stdout:
 .ft B
-cat foo |amigadepacker -c > foo.depacked
+amigadepacker < foo > foo.depacked
 
 .ft R
-Find all packed files under /path:
+Find all packed files under /path, but do not unpack anything (--pretend):
 .ft B
-find /path/ -type f -print0 |xargs -0 amigadepacker -p --
+find /path/ -type f -print0 |xargs -0 amigadepacker --pretend --
+
+.SH GIT REPOSITORY
+The latest version of amigadepacker can be obtained with:
+
+.ft B
+git-clone git://zakalwe.fi/amigadepacker amigadepacker.git
 
 .SH AUTHOR
 .B amigadepacker
@@ -66,8 +75,8 @@ SQSH format was written by Bert Jahn <jah@fh-zwickau.de>, PowerPacker
 depacker and decrypter by Stuart Caie <kyzer@4u.net>, MMCMP depacker
 by Olivier Lapicque <olivierl@jps.net> and StoneCracker (S404) depacker
 by Jouni "Spiv" Korhonen.
-The amigadepacker
-web page is located at http://www.iki.fi/shd/foss/amigadepacker/
+The amigadepacker web site is located at
+http://www.iki.fi/shd/foss/amigadepacker/
 
 .SH "SEE ALSO"
 \fIlha\fP(1),

@@ -157,7 +157,7 @@ static struct decruncher *check_header(uint8_t b[16])
 }
 
 
-int decrunch(const char *filename, FILE *out, int pretend)
+int decrunch(FILE *out, const char *filename, int pretend)
 {
     uint8_t b[16];
     int res;
@@ -168,7 +168,7 @@ int decrunch(const char *filename, FILE *out, int pretend)
     struct decruncher *decruncher;
     int output_to_same_file = (out == NULL);
 
-    if (filename[0]) {
+    if (filename) {
 	in = fopen(filename, "rb");
 	if (in == NULL) {
 	    fprintf(stderr, "Unknown file %s\n", filename);
@@ -186,7 +186,7 @@ int decrunch(const char *filename, FILE *out, int pretend)
     if (decruncher == NULL)
 	goto error;
 
-    if (filename[0])
+    if (filename)
 	fprintf(stderr, "File %s is in %s format.\n", filename, decruncher->name);
     else
 	fprintf(stderr, "Stream is in %s format.\n", decruncher->name);
@@ -226,13 +226,12 @@ int decrunch(const char *filename, FILE *out, int pretend)
     free(buf);
 
     fclose(in);
-    fclose(out);
 
     if (output_to_same_file) {
 	assert(dstname[0] != 0);
 
 #ifdef RENAME_WORKAROUND
-	/* Don't check return value of unlink() */
+	/* Don't check return value of unlink(). This is for MinGW. */
 	unlink(filename);
 #endif
 
@@ -245,11 +244,7 @@ int decrunch(const char *filename, FILE *out, int pretend)
     return 0;
 
  error:
-    if (in)
-	fclose(in);
-
-    if (out != NULL)
-      fclose(out);
+    fclose(in);
 
     if (dstname[0])
 	unlink(dstname);
