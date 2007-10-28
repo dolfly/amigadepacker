@@ -66,6 +66,12 @@ if test "$1" = "--enc" ; then
     fi
 fi
 
+depack "Test 6" "mod.chip.mmcmp" "a94b233e18dcf26e0c6170c79ef90d16" stdout
+newres="$?"
+if test "$newres" != "0" ; then
+    res="1"
+fi
+
 if test "$res" != "0" ; then
     echo "Some errors happened during the test."
 else
