@@ -30,30 +30,16 @@ if test -z "$CC" ; then
     CC=gcc
 fi
 
-sed -e "s|{PREFIX}|$prefix|g" \
-    -e "s|{VERSION}|$version|g" \
-    -e "s|{CC}|$CC|g" \
-    < Makefile.in > Makefile
-
 echo "#define VERSION \"$version\"" > version.h
 
 echo "" > config.h
 
+EXTRAMODULES=""
+
 echo "$(uname)" |grep -i MINGW > /dev/null 2>/dev/null
 if test "$?" = "0" ; then
     echo "#define RENAME_WORKAROUND" >> config.h
-
-    echo
-    echo
-    echo
-    echo "MinGW warning: amigadepacker -o outfile infile is the only method that works."
-    echo "Using amigapacker -c or amigadepacker infile will yield corrupt files."
-    echo
-    echo "Sleeping 5 seconds..."
-    echo
-    echo
-    echo
-    sleep 5
+    EXTRAMODULES="$EXTRAMODULES /mingw/lib/binmode.o"
 fi
 
 mkstemp="yes"
@@ -67,6 +53,12 @@ if test "$?" != "0"; then
     mkstemp="no"
 fi
 rm -f mkstemptest
+
+sed -e "s|{PREFIX}|$prefix|g" \
+    -e "s|{VERSION}|$version|g" \
+    -e "s|{CC}|$CC|g" \
+    -e "s|{EXTRAMODULES}|$EXTRAMODULES|g" \
+    < Makefile.in > Makefile
 
 echo
 echo "Install path:    $prefix/bin"

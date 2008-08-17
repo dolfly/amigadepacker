@@ -1,8 +1,8 @@
-CC= {CC}
-CFLAGS= -Wall -O2 -g
-LDFLAGS=
-MODULES= main.o decrunch.o ppdepack.o mmcmp.o s404_dec.o unsqsh.o compat.o
-RELDIR=amigadepacker-{VERSION}
+CC = {CC}
+CFLAGS = -Wall -O2 -g
+LDFLAGS =
+MODULES = main.o decrunch.o ppdepack.o mmcmp.o s404_dec.o unsqsh.o compat.o {EXTRAMODULES}
+RELDIR = amigadepacker-{VERSION}
 
 amigadepacker:	$(MODULES)
 	$(CC) -o $@ $(MODULES)
