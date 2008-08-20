@@ -207,6 +207,7 @@ int decrunch(FILE *out, const char *filename, int pretend)
 
 	fd = mkstemp(dstname);
 	if (fd < 0) {
+	    dstname[0] = 0;
 	    fprintf(stderr, "Could not create a temporary file: %s (%s)\n", dstname, strerror(errno));
 	    goto error;
 	}
@@ -249,8 +250,12 @@ int decrunch(FILE *out, const char *filename, int pretend)
  error:
     fclose(in);
 
-    if (dstname[0])
+    if (dstname[0]) {
+        if (out != NULL)
+            fclose(out);
+
 	unlink(dstname);
+    }
 
     if (buf)
 	free(buf);
