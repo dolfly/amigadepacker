@@ -228,6 +228,9 @@ int decrunch(FILE *out, const char *filename, int pretend)
     fclose(in);
 
     if (output_to_same_file) {
+	fclose(out);
+	out = NULL;
+
 	assert(dstname[0] != 0);
 
 #ifdef RENAME_WORKAROUND
