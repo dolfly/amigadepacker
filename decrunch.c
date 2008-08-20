@@ -163,7 +163,7 @@ int decrunch(FILE *out, const char *filename, int pretend)
     int res;
     size_t nbytes;
     FILE *in;
-    char dstname[PATH_MAX] = "";
+    char tmpname[PATH_MAX] = "";
     uint8_t *buf = NULL;
     struct decruncher *decruncher;
     int output_to_same_file = (out == NULL);
@@ -203,18 +203,18 @@ int decrunch(FILE *out, const char *filename, int pretend)
     if (output_to_same_file) {
 	int fd;
 
-	snprintf(dstname, sizeof dstname, "%s.XXXXXX", filename);
+	snprintf(tmpname, sizeof tmpname, "%s.XXXXXX", filename);
 
-	fd = mkstemp(dstname);
+	fd = mkstemp(tmpname);
 	if (fd < 0) {
-	    dstname[0] = 0;
-	    fprintf(stderr, "Could not create a temporary file: %s (%s)\n", dstname, strerror(errno));
+	    tmpname[0] = 0;
+	    fprintf(stderr, "Could not create a temporary file: %s (%s)\n", tmpname, strerror(errno));
 	    goto error;
 	}
 
 	out = fdopen(fd, "wb");
 	if (out == NULL) {
-	    fprintf(stderr, "Could not fdopen temporary file: %s\n", dstname);
+	    fprintf(stderr, "Could not fdopen temporary file: %s\n", tmpname);
 	    goto error;
 	}
     }
@@ -232,16 +232,16 @@ int decrunch(FILE *out, const char *filename, int pretend)
 	fclose(out);
 	out = NULL;
 
-	assert(dstname[0] != 0);
+	assert(tmpname[0] != 0);
 
 #ifdef RENAME_WORKAROUND
 	/* Don't check return value of unlink(). This is for MinGW. */
 	unlink(filename);
 #endif
 
-	if (rename(dstname, filename)) {
-	    fprintf(stderr, "Rename error: %s -> %s (%s)\n", dstname, filename, strerror(errno));
-	    unlink(dstname);
+	if (rename(tmpname, filename)) {
+	    fprintf(stderr, "Rename error: %s -> %s (%s)\n", tmpname, filename, strerror(errno));
+	    unlink(tmpname);
 	}
     }
 
@@ -250,11 +250,11 @@ int decrunch(FILE *out, const char *filename, int pretend)
  error:
     fclose(in);
 
-    if (dstname[0]) {
+    if (tmpname[0]) {
         if (out != NULL)
             fclose(out);
 
-	unlink(dstname);
+	unlink(tmpname);
     }
 
     if (buf)
