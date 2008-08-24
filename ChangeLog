@@ -1,3 +1,11 @@
+2008-08-24  Heikki Orsila <heikki.orsila@iki.fi>
+	* Amigadepacker 0.04 released
+
+	- Better MinGW support
+	- Better documentation
+	- Bug fixes
+	- Code cleanups
+
 2007-10-19  Heikki Orsila <heikki.orsila@iki.fi>
 	* Amigadepacker 0.03
 	- Partial MinGW support, but still broken for anything but
