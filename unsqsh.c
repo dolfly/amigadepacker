@@ -187,7 +187,7 @@ static int unpack(byte *src, byte *dst, int len) {
 	  return decrunched;
 
     len -= cup1;
-	decrunched+=cup1;;
+	decrunched+=cup1;
     
     cp = (cp + 3) & 0xfffc;
     c += cp;
